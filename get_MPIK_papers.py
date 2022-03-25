@@ -4,12 +4,12 @@ __license__ = 'GPL'
 __email__ = 'tim.wolf@mpi-hd.mpg.de'
 
 import sys
-import requests
 import json
 import time
 import argparse
 from urllib.parse import quote
 import tqdm
+import myutils
 
 
 
@@ -50,60 +50,6 @@ def parse_args(args):
 
     return dict(vars(parser.parse_args()))
 
-def read_from_inspire(formatted_query):
-        response = requests.get(formatted_query)
-        while response.status_code != 200:
-            response = requests.get(formatted_query)
-            #  response.raise_for_status()  # raises exception when not a 2xx response
-            time.sleep(0.5)
-            print("retrieving failed, with status code: " + str(response.status_code))
-            print("query is:")
-            print(formatted_query)
-            print("trying again...")
-        else:
-            data = response.json()
-            print("data retrieved.")
-        return data
-
-def get_publication_by_id(id_list, size):
-    other_query = 'https://inspirehep.net/api/literature?fields=titles,authors,id&sort=mostrecent&size={size}&page={page}&q='
-    id_template = 'id%3A{id} or '
-
-    id_query = ""
-    for id in id_list:
-        id_query += id_template.format(id=id)
-    else:
-        id_query = id_query[:-4]
-    id_query = id_query.replace(" ", "%20")
-    return other_query.format(page='1', size=size) + id_query
-
-
-def build_time_query(lower_date=None, upper_date=None):
-    time_query_low = 'date:>{lower_date}'
-    time_query_up = 'date:<{upper_date}'
-    if upper_date is not None and lower_date is not None:
-        return "(" + time_query_low.format(
-            lower_date=lower_date) + " and " + time_query_up.format(
-                upper_date=upper_date) + ")"
-    elif lower_date is not None:
-        return "(" + time_query_low.format(lower_date=lower_date) + ")"
-    else:
-        return ""
-
-
-def build_people_query(file_to_read="authors.txt"):
-    # This needs to be replaced with the csv from Anja
-    with open(file_to_read, "r") as f:
-        people_to_match = f.readlines()
-
-    author_query = '(author%3A{name})'
-    people_query = ""
-    for author in people_to_match:
-        people_query += author_query.format(name=author) + " or "
-    else:
-        people_query = people_query[:-4]
-    people_query = people_query.replace(" ", "%20")
-    return people_query, people_to_match
 
 
 def main(arguments):
@@ -112,9 +58,9 @@ def main(arguments):
 
     # building query command
     institute_query = 'https://inspirehep.net/api/literature?sort=mostrecent&size={size}&page={page}&q=aff:{institute}'
-    people_query, people_to_match = build_people_query(
+    people_query, people_to_match = myutils.build_people_query(
         file_to_read=parsed_args["file_to_read"])
-    time_query = build_time_query(lower_date=parsed_args["lower_date"],
+    time_query = myutils.build_time_query(lower_date=parsed_args["lower_date"],
                                   upper_date=parsed_args["upper_date"])
     if time_query != "":
         total_query = institute_query + " and " + time_query + " and " + people_query
@@ -129,7 +75,7 @@ def main(arguments):
 
     if parsed_args["retrieve"]:
         # retrieving data
-        data = read_from_inspire(formatted_query=formatted_query)
+        data = myutils.read_from_inspire(formatted_query=formatted_query)
         total_hits = data["hits"]["total"]
         n_pages = int(total_hits / int(size)) + 1
         for i in tqdm.tqdm(range(n_pages)):
@@ -139,7 +85,7 @@ def main(arguments):
                                        size=str(size),
                                        institute=quote(
                                            parsed_args["institute"]))
-                temp_data = read_from_inspire(formatted_query=this_query)
+                temp_data = myutils.read_from_inspire(formatted_query=this_query)
                 data["hits"]["hits"] += temp_data["hits"]["hits"]
 
         with open(parsed_args["cache_file"], "w") as f:
@@ -176,10 +122,10 @@ def main(arguments):
     print(len(collected_ids))
     print(len(unmachted_publications))
 
-    unmachted_query = get_publication_by_id(id_list=unmachted_publications, size=size)
+    unmachted_query = myutils.get_publication_by_id(id_list=unmachted_publications, size=size)
     print(unmachted_query)
 
-    matched_query = get_publication_by_id(id_list=collected_ids, size=size)
+    matched_query = myutils.get_publication_by_id(id_list=collected_ids, size=size)
 
     #  other_query = 'https://inspirehep.net/api/literature?sort=mostrecent&size={size}&page={page}&q='
     #  id_template = 'id%3A{id}'
