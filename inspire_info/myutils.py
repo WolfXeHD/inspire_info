@@ -2,6 +2,9 @@ import requests
 import time
 import datetime
 import yaml
+from urllib.parse import quote
+import json
+import tqdm
 
 def read_config(file_to_read):
     with open(file_to_read, "r") as f:
@@ -39,7 +42,7 @@ def get_publication_query(publications, clickable):
 
 def get_publication_by_id(id_list, size=500):
     other_query = 'https://inspirehep.net/api/literature?fields=titles,authors,id&sort=mostrecent&size={size}&page={page}&q='
-    id_template = 'id%3A{id} or '
+    id_template = 'recid%3A{id} or '
 
     id_query = ""
     for id in id_list:
@@ -110,6 +113,33 @@ def get_matched_authors(publications, institute, people_to_exclude):
     return all_authors_named
 
 
+def get_data(global_query, retrieve, institute_and_time_query, config):
+    if retrieve:
+        # retrieving data
+        data = read_from_inspire(formatted_query=global_query)
+        total_hits = data["hits"]["total"]
+        n_pages = int(total_hits / int(config["size"])) + 1
+        for i in tqdm.tqdm(range(n_pages)):
+            if i > 0:
+                time.sleep(1.0)
+                this_query = institute_and_time_query.format(
+                    page=str(i + 1),
+                    size=str(config["size"]),
+                    institute=quote(config["institute"]))
+                temp_data = read_from_inspire(
+                    formatted_query=this_query)
+                data["hits"]["hits"] += temp_data["hits"]["hits"]
+
+        with open(config["cache_file"], "w") as f:
+            json.dump(data, f)
+    else:
+        print("Loading data...")
+        with open(config["cache_file"], "r") as f:
+            data = json.load(f)
+        total_hits = data["hits"]["total"]
+    return data
+
+
 class InspireInfo(object):
     def __init__(self, data):
         self.data = data
@@ -120,6 +150,9 @@ class Publication(object):
         self.publication = publication
         self.meta = publication["metadata"]
         self.authors = self.meta["authors"]
+
+        self.author_objects = [Author(author) for author in self.authors]
+        self.author_names = [auth.full_name for auth in self.author_objects]
         self.id = publication["id"]
         self.earliest_date = self.meta["earliest_date"]
         self.title = self.meta["titles"][0]["title"]

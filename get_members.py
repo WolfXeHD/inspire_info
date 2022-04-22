@@ -50,6 +50,8 @@ def main(arguments):
     institute = config["institute"]
     config_path = os.path.abspath(parsed_args["config"])
     cache_file = config_path.replace(".yaml", ".json")
+    config["cache_file"] = cache_file
+    name_proposal = config_path.replace(".yaml", "_name_proposal.txt")
 
     # get the inspire id of the institute
     institute_and_time_query = inspire_info.build_query_template(
@@ -59,29 +61,11 @@ def main(arguments):
                                                    size=str(size),
                                                    institute=quote(institute))
 
-    if parsed_args["retrieve"]:
-        # retrieving data
-        data = inspire_info.read_from_inspire(formatted_query=global_query)
-        total_hits = data["hits"]["total"]
-        n_pages = int(total_hits / int(size)) + 1
-        for i in tqdm.tqdm(range(n_pages)):
-            if i > 0:
-                time.sleep(1.0)
-                this_query = institute_and_time_query.format(
-                    page=str(i + 1),
-                    size=str(size),
-                    institute=quote(institute))
-                temp_data = inspire_info.read_from_inspire(
-                    formatted_query=this_query)
-                data["hits"]["hits"] += temp_data["hits"]["hits"]
-
-        with open(cache_file, "w") as f:
-            json.dump(data, f)
-    else:
-        print("Loading data...")
-        with open(cache_file, "r") as f:
-            data = json.load(f)
-        total_hits = data["hits"]["total"]
+    data = inspire_info.get_data(
+        global_query=global_query,
+        retrieve=parsed_args["retrieve"],
+        institute_and_time_query=institute_and_time_query,
+        config=config)
 
     matched_publications = []
     unmachted_publications = []
@@ -115,8 +99,8 @@ def main(arguments):
         people_to_exclude=config["people_to_exclude"])
 
     if parsed_args["get_name_proposal"]:
-        print("Writing out name_proposal.txt")
-        with open("name_proposal.txt", "w") as f:
+        print("Writing out", name_proposal)
+        with open(name_proposal, "w") as f:
             for name in sorted(all_authors_from_institution_named):
                 f.write(name + "\n")
 
