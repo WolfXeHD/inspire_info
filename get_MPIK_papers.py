@@ -42,7 +42,6 @@ def parse_args(args):
                         type=str,
                         required=True,
                         help="cache file to store data")
-
     parser.add_argument('--size',
                         type=int,
                         default=500,
@@ -108,8 +107,9 @@ def main(arguments):
                 if aff.get("value") == parsed_args["institute"]:
                     for person in people_to_match:
                         this_person = person.replace("\n", "")
-                        if this_person in author["name_suggest"]["input"]:
+                        if this_person in author["full_name"]:
                             found = True
+                            __import__('ipdb').set_trace()
                 else:
                     continue
             if found:
@@ -122,10 +122,10 @@ def main(arguments):
     print(len(collected_ids))
     print(len(unmachted_publications))
 
-    unmachted_query = myutils.get_publication_by_id(id_list=unmachted_publications, size=size)
-    print(unmachted_query)
-
-    matched_query = myutils.get_publication_by_id(id_list=collected_ids, size=size)
+    #  unmachted_query = myutils.get_publication_by_id(id_list=unmachted_publications, size=size)
+    #  print(unmachted_query)
+    #
+    #  matched_query = myutils.get_publication_by_id(id_list=collected_ids, size=size)
 
     #  other_query = 'https://inspirehep.net/api/literature?sort=mostrecent&size={size}&page={page}&q='
     #  id_template = 'id%3A{id}'
