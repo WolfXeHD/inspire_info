@@ -24,15 +24,12 @@ Barnabé Heider, M.
 Barnabé-Heider, M.
 Barry, James
 Bauer, C.
-Beck, M.
 Benkhali, F.Ait
-Bensch, F.
 Bernlöhr, K.
 Bick, D.
 Bischer, Ingolf
 Blennow, M.
 Blennow, Mattias
-Bockholt, J.
 Bollig, J.
 Bonet, H.
 Bonhomme, A.
@@ -121,7 +118,6 @@ Heusser, Gerd
 Hillert, A.
 Hinton, J.A.
 Hinton, Jim
-Hirsch, M.
 Hoetzsch, L.
 Hofacker, R.
 Hoffmann, W.
@@ -177,7 +173,6 @@ Lui, R.
 López-Coto, R.
 Machado, A.A.
 Maciuc, F.
-Maier, B.
 Maneschg, W.
 Maneschg, Werner
 Marandon, V.
@@ -201,8 +196,6 @@ Panter, M.
 Parsons, R.D.
 Patra, Sudhanwa
 Peiffer, P.
-Petry, F.
-Piepke, A.
 Pizzella, V.
 Platscher, Moritz
 Pollmann, T.
@@ -292,7 +285,6 @@ Vogl, Stefan
 Volyanskyy, D.
 Voss, H.
 Völk, H.J.
-Völlinger, M.
 Wack, O.
 Wagner, S.
 Wagner, V.
@@ -317,6 +309,5 @@ Zanin, R.
 Zavertyaev, M.
 Zhang, He
 Zorn, J.
-Zuber, K.
 Zuzel, G.
 de los Reyes, R.

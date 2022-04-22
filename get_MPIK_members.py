@@ -9,9 +9,10 @@ import json
 import time
 import argparse
 from urllib.parse import quote
-import myutils
+import inspire_info
 import tqdm
 import math
+import datetime
 
 
 def parse_args(args):
@@ -36,17 +37,22 @@ def parse_args(args):
         '--retrieve',
         action='store_true',
         help=
-        "If true API-call is created, otherwise cache-file is going to be used."
+        "If added API-call is created, otherwise cache-file is going to be used."
     )
-    parser.add_argument('--cache_file',
-                        type=str,
-                        required=True,
-                        help="cache file to store data")
+    parser.add_argument(
+        '--cache_file',
+        type=str,
+        required=True,
+        help="cache file to store/read data, depending on --retrieve")
 
     parser.add_argument('--size',
                         type=int,
                         default=500,
                         help="size of queried package")
+    parser.add_argument(
+        '--get_links',
+        action='store_true',
+        help="Prints the inspire quieries to the found publications")
 
     return dict(vars(parser.parse_args()))
 
@@ -55,47 +61,53 @@ def main(arguments):
     parsed_args = parse_args(args=arguments)
     size = parsed_args["size"]
 
-    # building query command
-    institute_query = 'https://inspirehep.net/api/literature?sort=mostrecent&size={size}&page={page}&q=aff:{institute}'
-    time_query = myutils.build_time_query(lower_date=parsed_args["lower_date"],
-                                          upper_date=parsed_args["upper_date"])
-    if time_query != "":
-        total_query = institute_query + " and " + time_query
-    else:
-        total_query = institute_query
+    # get the inspire id of the institute
+    institute_and_time_query = inspire_info.build_query_template(
+        lower_date=parsed_args["lower_date"],
+        upper_date=parsed_args["upper_date"])
 
-    total_query = total_query.replace(" ", "%20")
-    total_query = total_query.replace("\n", "")
-    formatted_query = total_query.format(page='1',
-                                         size=str(size),
-                                         institute=quote(
-                                             parsed_args["institute"]))
+    global_query = institute_and_time_query.format(
+        page='1', size=str(size), institute=quote(parsed_args["institute"]))
 
     keywords_to_check = [
-        "neutrino", "bsm", "darkmatter", "dm", "double beta decay", "double chooz", "conus",
-        "stereo", "xenon", "darwin", "borexino", "gerda", "legend", "neutrino: oscillation", "neutrino: mixing",
+        "neutrino",
+        "bsm",
+        "darkmatter",
+        "dm",
+        "double beta decay",
+        "double chooz",
+        "conus",
+        "stereo",
+        "xenon",
+        "darwin",
+        "borexino",
+        "gerda",
+        "legend",
+        "neutrino: oscillation",
+        "neutrino: mixing",
         "double-beta decay",
     ]
 
     if parsed_args["retrieve"]:
         # retrieving data
-        data = myutils.read_from_inspire(formatted_query=formatted_query)
+        data = inspire_info.read_from_inspire(formatted_query=global_query)
         total_hits = data["hits"]["total"]
         n_pages = int(total_hits / int(size)) + 1
         for i in tqdm.tqdm(range(n_pages)):
             if i > 0:
                 time.sleep(0.5)
-                this_query = total_query.format(page=str(i + 1),
-                                                size=str(size),
-                                                institute=quote(
-                                                    parsed_args["institute"]))
-                temp_data = myutils.read_from_inspire(
+                this_query = institute_and_time_query.format(
+                    page=str(i + 1),
+                    size=str(size),
+                    institute=quote(parsed_args["institute"]))
+                temp_data = inspire_info.read_from_inspire(
                     formatted_query=this_query)
                 data["hits"]["hits"] += temp_data["hits"]["hits"]
 
         with open(parsed_args["cache_file"], "w") as f:
             json.dump(data, f)
     else:
+        print("Loading data...")
         with open(parsed_args["cache_file"], "r") as f:
             data = json.load(f)
         total_hits = data["hits"]["total"]
@@ -103,75 +115,54 @@ def main(arguments):
     matched_publications = []
     unmachted_publications = []
 
+    weird_publications = []
+
     # filter by keywords
     publications_without_keywords = []
     for publication in data["hits"]["hits"]:
-        meta = publication["metadata"]
-        try:
-            keywords = [item["value"].lower() for item in meta["keywords"]]
-        except:
-            publications_without_keywords.append(publications_without_keywords)
-            continue
-        publication["mykeywords"] = keywords
+        pub = inspire_info.Publication(publication)
+        if parsed_args["lower_date"]:
+            datetime_object = datetime.datetime.strptime(
+                parsed_args["lower_date"], "%Y-%m-%d")
+            if pub.earliest_date_year < datetime_object.year:
+                weird_publications.append(pub)
+                continue
 
-        for key in keywords_to_check:
-            if key in keywords:
-                matched_publications.append(publication)
-                break
-        else:
-            unmachted_publications.append(publication)
-
-    all_authors_from_MPIK = []
-    for pub in matched_publications:
-        for author in pub["metadata"]["authors"]:
-            if "affiliations" in author.keys():
-                affiliations = [affiliation["value"] for affiliation in author["affiliations"]]
-            elif "raw_affiliations" in author.keys():
-                affiliations = [affiliation["value"] for affiliation in author["raw_affiliations"]]
+        if pub.keywords is not None:
+            for keyword in keywords_to_check:
+                if keyword in pub.keywords:
+                    matched_publications.append(pub)
+                    break
             else:
-                affiliations = ["None"]
+                unmachted_publications.append(pub)
+        else:
+            publications_without_keywords.append(pub)
+            continue
 
-            if parsed_args["institute"] in affiliations:
-                if "Blaum" in author["full_name"]:
-                    continue
-                all_authors_from_MPIK.append(author)
-            #  else:
-            #      for affiliation in affiliations:
-            #          if "Kern" in affiliation:
-            #              print("Suspect...")
-            #              __import__('ipdb').set_trace()
+    #  print(
+    #      inspire_info.get_publication_query(weird_publications, clickable=True))
 
-    all_authors_from_MPIK_named = list(set([author["full_name"] for author in all_authors_from_MPIK]))
+    all_authors_from_MPIK_named = inspire_info.get_matched_authors(
+        publications=matched_publications,
+        institute=parsed_args["institute"],
+        people_to_exclude=["Blaum"])
+
     with open("name_proposal.txt", "w") as f:
         for name in sorted(all_authors_from_MPIK_named):
             f.write(name + "\n")
 
+    if parsed_args["get_links"]:
+        print(len(matched_publications))
+        for i in range(math.ceil(len(matched_publications) / 100)):
+            print(100 * i, 100 * (i + 1))
+            print(len(matched_publications[100 * i:100 * (i + 1)]))
 
-        #  all_authors += [item["full_name"] for item in pub["metadata"]["authors"]]
-    #  id_list = []
-    #  for pub in matched_publications:
-    #      id_list.append(pub["id"])
-
-    #  matched_query = myutils.get_publication_by_id(id_list=id_list[:100], size=size)
-    #  clickalbe_link = matched_query.replace("api/", "").replace("fields=titles,authors,id", "")
-    #  matched_query = myutils.get_publication_query(matched_publications[:100], clickable=False)
-
-    print(len(matched_publications))
-    for i in range(math.ceil(len(matched_publications) / 100)):
-        print(100 * i, 100 * (i + 1))
-        print(len(matched_publications[100 * i: 100 * (i + 1)]))
-
-        clickalbe_link = myutils.get_publication_query(matched_publications[100 * i: 100 * (i + 1)], clickable=True)
-        print("LINK {i}".format(i=i))
-        print(clickalbe_link)
-        print()
-
-    #  other_query = 'https://inspirehep.net/api/literature?sort=mostrecent&size={size}&page={page}&q='
-    #  id_template = 'id%3A{id}'
-    #  chosen_format = '&format={format_name}'.format(
-    #      format_name=parsed_args["format"])
-    #  test_query = other_query + id_template + chosen_format
-    #  my_query = test_query.format(size=size, page='1', id=collected_ids[0])
+            clickalbe_link = inspire_info.get_publication_query(
+                matched_publications[100 * i:100 * (i + 1)], clickable=True)
+            print("LINK {i}".format(i=i))
+            print(clickalbe_link)
+            print()
+            print()
 
 
 if __name__ == "__main__":
