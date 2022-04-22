@@ -1,14 +1,19 @@
 import requests
 import time
 import datetime
+import yaml
 
+def read_config(file_to_read):
+    with open(file_to_read, "r") as f:
+        config = yaml.load(f, Loader=yaml.SafeLoader)
+    return config
 
 def read_from_inspire(formatted_query):
     response = requests.get(formatted_query)
     while response.status_code != 200:
         response = requests.get(formatted_query)
         #  response.raise_for_status()  # raises exception when not a 2xx response
-        time.sleep(0.5)
+        time.sleep(1.0)
         print("retrieving failed, with status code: " +
               str(response.status_code))
         print("query is:")
@@ -88,7 +93,6 @@ def build_query_template(lower_date, upper_date):
     return institute_and_time_query
 
 
-
 def get_matched_authors(publications, institute, people_to_exclude):
     all_authors = []
     for pub in publications:
@@ -96,12 +100,13 @@ def get_matched_authors(publications, institute, people_to_exclude):
             auth = Author(author)
             if auth.affiliations is not None and institute in auth.affiliations:
                 for name in people_to_exclude:
-                    if name in author["full_name"]:
-                        continue
-                    all_authors.append(author)
+                    if name in auth.full_name:
+                        print("excluding: " + auth.full_name, "with publication", pub.title)
+                        break
+                    all_authors.append(auth)
 
     all_authors_named = list(
-        set([author["full_name"] for author in all_authors]))
+        set([auth.full_name for auth in all_authors]))
     return all_authors_named
 
 
@@ -124,6 +129,8 @@ class Publication(object):
         datetime_object = datetime.datetime.strptime(self.earliest_date, '%Y')
         self.earliest_date_year = datetime_object.year
 
+    def __repr__(self):
+        return "Publication(" + self.title + ")"
 
     @property
     def keywords(self):
@@ -135,6 +142,7 @@ class Publication(object):
 class Author(object):
     def __init__(self, author):
         self.author = author
+        self.full_name = author["full_name"]
 
     @property
     def affiliations(self):
@@ -151,3 +159,6 @@ class Author(object):
         else:
             affiliations = None
         return affiliations
+
+    def __repr__(self):
+        return "Author(" + self.full_name + ")"

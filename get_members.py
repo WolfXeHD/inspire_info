@@ -4,7 +4,6 @@ __license__ = 'GPL'
 __email__ = 'tim.wolf@mpi-hd.mpg.de'
 
 import sys
-import requests
 import json
 import time
 import argparse
@@ -13,26 +12,12 @@ import inspire_info
 import tqdm
 import math
 import datetime
+import os
 
 
 def parse_args(args):
     parser = argparse.ArgumentParser(
         description='Scraping of inspire for institute publications')
-    parser.add_argument('--institute',
-                        type=str,
-                        default="Heidelberg, Max Planck Inst.")
-    parser.add_argument('--format',
-                        type=str,
-                        default="json",
-                        choices=["json", "bibtex", "latex-eu", "latex-us"])
-    parser.add_argument('--lower_date',
-                        type=str,
-                        default=None,
-                        help="needs to be in format YYYY-MM-DD.")
-    parser.add_argument('--upper_date',
-                        type=str,
-                        default=None,
-                        help="needs to be in format YYYY-MM-DD.")
     parser.add_argument(
         '--retrieve',
         action='store_true',
@@ -40,53 +25,39 @@ def parse_args(args):
         "If added API-call is created, otherwise cache-file is going to be used."
     )
     parser.add_argument(
-        '--cache_file',
-        type=str,
-        required=True,
-        help="cache file to store/read data, depending on --retrieve")
-
-    parser.add_argument('--size',
-                        type=int,
-                        default=500,
-                        help="size of queried package")
-    parser.add_argument(
         '--get_links',
         action='store_true',
         help="Prints the inspire quieries to the found publications")
+    parser.add_argument('--get_name_proposal',
+                        action='store_true',
+                        help="Write out name_proposal.txt")
+    parser.add_argument('--config',
+                        type=str,
+                        help="Config file to read.",
+                        required=True)
 
-    return dict(vars(parser.parse_args()))
+    return dict(vars(parser.parse_args(args)))
 
 
 def main(arguments):
     parsed_args = parse_args(args=arguments)
-    size = parsed_args["size"]
+
+    config = inspire_info.read_config(parsed_args["config"])
+    size = config["size"]
+    keywords_to_check = config["keywords"]
+    lower_date = config["lower_date"]
+    upper_date = config["upper_date"]
+    institute = config["institute"]
+    config_path = os.path.abspath(parsed_args["config"])
+    cache_file = config_path.replace(".yaml", ".json")
 
     # get the inspire id of the institute
     institute_and_time_query = inspire_info.build_query_template(
-        lower_date=parsed_args["lower_date"],
-        upper_date=parsed_args["upper_date"])
+        lower_date=lower_date, upper_date=upper_date)
 
-    global_query = institute_and_time_query.format(
-        page='1', size=str(size), institute=quote(parsed_args["institute"]))
-
-    keywords_to_check = [
-        "neutrino",
-        "bsm",
-        "darkmatter",
-        "dm",
-        "double beta decay",
-        "double chooz",
-        "conus",
-        "stereo",
-        "xenon",
-        "darwin",
-        "borexino",
-        "gerda",
-        "legend",
-        "neutrino: oscillation",
-        "neutrino: mixing",
-        "double-beta decay",
-    ]
+    global_query = institute_and_time_query.format(page='1',
+                                                   size=str(size),
+                                                   institute=quote(institute))
 
     if parsed_args["retrieve"]:
         # retrieving data
@@ -95,35 +66,34 @@ def main(arguments):
         n_pages = int(total_hits / int(size)) + 1
         for i in tqdm.tqdm(range(n_pages)):
             if i > 0:
-                time.sleep(0.5)
+                time.sleep(1.0)
                 this_query = institute_and_time_query.format(
                     page=str(i + 1),
                     size=str(size),
-                    institute=quote(parsed_args["institute"]))
+                    institute=quote(institute))
                 temp_data = inspire_info.read_from_inspire(
                     formatted_query=this_query)
                 data["hits"]["hits"] += temp_data["hits"]["hits"]
 
-        with open(parsed_args["cache_file"], "w") as f:
+        with open(cache_file, "w") as f:
             json.dump(data, f)
     else:
         print("Loading data...")
-        with open(parsed_args["cache_file"], "r") as f:
+        with open(cache_file, "r") as f:
             data = json.load(f)
         total_hits = data["hits"]["total"]
 
     matched_publications = []
     unmachted_publications = []
-
     weird_publications = []
 
     # filter by keywords
     publications_without_keywords = []
     for publication in data["hits"]["hits"]:
         pub = inspire_info.Publication(publication)
-        if parsed_args["lower_date"]:
+        if lower_date:
             datetime_object = datetime.datetime.strptime(
-                parsed_args["lower_date"], "%Y-%m-%d")
+                lower_date, "%Y-%m-%d")
             if pub.earliest_date_year < datetime_object.year:
                 weird_publications.append(pub)
                 continue
@@ -139,17 +109,16 @@ def main(arguments):
             publications_without_keywords.append(pub)
             continue
 
-    #  print(
-    #      inspire_info.get_publication_query(weird_publications, clickable=True))
-
-    all_authors_from_MPIK_named = inspire_info.get_matched_authors(
+    all_authors_from_institution_named = inspire_info.get_matched_authors(
         publications=matched_publications,
-        institute=parsed_args["institute"],
-        people_to_exclude=["Blaum"])
+        institute=institute,
+        people_to_exclude=config["people_to_exclude"])
 
-    with open("name_proposal.txt", "w") as f:
-        for name in sorted(all_authors_from_MPIK_named):
-            f.write(name + "\n")
+    if parsed_args["get_name_proposal"]:
+        print("Writing out name_proposal.txt")
+        with open("name_proposal.txt", "w") as f:
+            for name in sorted(all_authors_from_institution_named):
+                f.write(name + "\n")
 
     if parsed_args["get_links"]:
         print(len(matched_publications))

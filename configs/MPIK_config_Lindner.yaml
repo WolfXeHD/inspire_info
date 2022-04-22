@@ -1,0 +1,26 @@
+institute: "Heidelberg, Max Planck Inst."
+lower_date: '2006-01-01'
+upper_date: null
+size: 500
+
+keywords:
+  - "neutrino"
+  - "bsm"
+  - "darkmatter"
+  - "dm"
+  - "double beta decay"
+  - "double chooz"
+  - "conus"
+  - "stereo"
+  - "xenon"
+  - "darwin"
+  - "borexino"
+  - "gerda"
+  - "legend"
+  - "neutrino: oscillation"
+  - "neutrino: mixing"
+  - "double-beta decay"
+
+people_to_exclude:
+  - "Blaum"
+  - "Tuffs"
