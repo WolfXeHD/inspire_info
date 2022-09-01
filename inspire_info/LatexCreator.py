@@ -73,4 +73,3 @@ def create_latex_doc(template, keys, filename, outdir):
     os.system(f"pdflatex -interaction=nonstopmode {filename}")
     os.system(f"pdflatex -interaction=nonstopmode {filename}")
     os.chdir(cwd)
-

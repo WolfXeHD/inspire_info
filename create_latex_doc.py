@@ -1,3 +1,8 @@
+__author__ = 'Tim Michael Heinz Wolf'
+__version__ = '0.0'
+__license__ = 'GPL'
+__email__ = 'tim.wolf@mpi-hd.mpg.de'
+
 from inspire_info import LatexCreator
 
 template = r"""\documentclass[11pt]{article}

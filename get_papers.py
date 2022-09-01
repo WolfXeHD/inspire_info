@@ -3,12 +3,14 @@ __version__ = '0.0'
 __license__ = 'GPL'
 __email__ = 'tim.wolf@mpi-hd.mpg.de'
 
+from ast import parse
 import sys
 import argparse
 import inspire_info
 from urllib.parse import quote
 import os
 import math
+from inspire_info.InspireInfo import InspireInfo
 
 
 def parse_args(args):
@@ -27,7 +29,7 @@ def parse_args(args):
                         default=None)
     parser.add_argument('--retrieve',
                         action='store_true',
-                        help="""If added API-call is created, otherwise 
+                        help="""If added API-call is created, otherwise
             cache-file is going to be used.""")
     parser.add_argument(
         '--lower_date',
@@ -53,78 +55,21 @@ def parse_args(args):
 
 def main(arguments):
     parsed_args = parse_args(args=arguments)
-    if parsed_args["use_custom_name_proposal"] is None:
-        name_proposal = parsed_args['config'].replace(".yaml",
-                                                      "_name_proposal.txt")
-    else:
-        name_proposal = parsed_args["use_custom_name_proposal"]
-    with open(name_proposal, "r") as f:
-        names = f.read().splitlines()
+    inspire_getter = InspireInfo(config_path=parsed_args["config"])
 
-    config = inspire_info.read_config(parsed_args["config"])
+    if parsed_args["use_custom_name_proposal"] is not None:
+        inspire_getter.name_proposal = parsed_args["use_custom_name_proposal"]
 
-    size = config["size"]
-
-    lower_date = parsed_args["lower_date"]
-    upper_date = parsed_args["upper_date"]
     print("Overwriting lower_date and upper_date in config with: {} {}".format(
-        lower_date, upper_date))
+        parsed_args["lower_date"], parsed_args["upper_date"]))
 
-    config["lower_date"] = lower_date
-    config["upper_date"] = upper_date
+    inspire_getter.config["lower_date"] = parsed_args["lower_date"]
+    inspire_getter.config["upper_date"] = parsed_args["upper_date"]
+    inspire_getter.get_data()
+    inspire_getter.read_name_proposal()
+    inspire_getter.match_publications_by_authors()
 
-    institute = config["institute"]
-    config_path = os.path.abspath(parsed_args["config"])
-    cache_file = config_path.replace(".yaml", ".pkl")
-    config["cache_file"] = cache_file
-    name_proposal = config_path.replace(".yaml", "_name_proposal.txt")
-
-    # get the inspire id of the institute
-    institute_and_time_query = inspire_info.build_query_template(
-        lower_date=lower_date, upper_date=upper_date)
-
-    global_query = institute_and_time_query.format(page='1',
-                                                   size=str(size),
-                                                   institute=quote(institute))
-    print(global_query)
-
-    data = inspire_info.get_data(
-        global_query=global_query,
-        retrieve=parsed_args["retrieve"],
-        institute_and_time_query=institute_and_time_query,
-        config=config)
-
-    matched_publications = []
-    unmatched_publications = []
-    for publication in data["hits"]["hits"]:
-        pub = inspire_info.Publication(publication)
-        matched = False
-        for author_to_check in names:
-            if author_to_check in pub.author_names:
-                idx = pub.author_names.index(author_to_check)
-                candidate_author = pub.author_objects[idx]
-                if candidate_author.affiliations is not None:
-                    for affiliation in candidate_author.affiliations:
-                        if affiliation == institute:
-                            matched_publications.append(pub)
-                            matched = True
-                            break
-            if matched:
-                break
-        if not matched:
-            unmatched_publications.append(pub)
-
-    for i in range(math.ceil(len(matched_publications) / 100)):
-        print(100 * i, 100 * (i + 1))
-        print(len(matched_publications[100 * i:100 * (i + 1)]))
-
-        clickalbe_link = inspire_info.get_publication_query(
-            matched_publications[100 * i:100 * (i + 1)], clickable=True)
-        print("LINK {i}".format(i=i))
-        print(clickalbe_link)
-        print()
-        print()
-
+    inspire_getter.print_clickable_links(match_type="matched")
 
 if __name__ == "__main__":
     main(sys.argv[1:])
