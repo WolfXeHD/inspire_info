@@ -12,3 +12,5 @@ data/*
 *.tex
 *.tar.gz
 *.pdf
+*.bib
+*.pkl
