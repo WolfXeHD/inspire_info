@@ -8,7 +8,6 @@ import argparse
 from urllib.parse import quote
 import inspire_info
 import math
-import datetime
 import os
 import tqdm
 

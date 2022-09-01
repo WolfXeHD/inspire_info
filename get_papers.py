@@ -25,12 +25,10 @@ def parse_args(args):
                         type=str,
                         help="Names of the people to match",
                         default=None)
-    parser.add_argument(
-        '--retrieve',
-        action='store_true',
-        help="""If added API-call is created, otherwise 
-            cache-file is going to be used."""
-    )
+    parser.add_argument('--retrieve',
+                        action='store_true',
+                        help="""If added API-call is created, otherwise 
+            cache-file is going to be used.""")
     parser.add_argument(
         '--lower_date',
         type=str,
@@ -103,8 +101,7 @@ def main(arguments):
         matched = False
         for author_to_check in names:
             if author_to_check in pub.author_names:
-                idx = pub.author_names.index(
-                    author_to_check)
+                idx = pub.author_names.index(author_to_check)
                 candidate_author = pub.author_objects[idx]
                 if candidate_author.affiliations is not None:
                     for affiliation in candidate_author.affiliations:
@@ -127,15 +124,6 @@ def main(arguments):
         print(clickalbe_link)
         print()
         print()
-
-    # inspire_info.get_tarball_of_publications(matched_publications, link_type="bibtex", target_dir="publications_bibtex")
-
-
-    # print("Unmatched publications")
-    # print(unmatched_publications)
-    # clickalbe_link = inspire_info.get_publication_query(
-    #     matched_publications, clickable=True)
-    # print(clickalbe_link)
 
 
 if __name__ == "__main__":
