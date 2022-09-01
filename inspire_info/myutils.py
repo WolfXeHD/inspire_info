@@ -3,6 +3,7 @@ import time
 from urllib.parse import quote
 
 import requests
+import math
 import tqdm
 import yaml
 import pickle
@@ -218,7 +219,53 @@ def convert_to_pandas(data):
     df["earliest_date"] = pd.to_datetime(earliest_date)
     return df
 
+def match_publications_by_keywords(publications, keywords):
+    publications_without_keywords = []
+    matched_publications = []
+    unmatched_publications = []
 
-class InspireInfo(object):
-    def __init__(self, data):
-        self.data = data
+    for pub in tqdm.tqdm(publications):
+        if pub.keywords is not None:
+            for keyword in keywords:
+                if keyword in pub.keywords:
+                    matched_publications.append(pub)
+                    break
+            else:
+                unmatched_publications.append(pub)
+        else:
+            publications_without_keywords.append(pub)
+            continue
+    return publications_without_keywords, matched_publications, unmatched_publications
+
+def match_publications_by_authors(publications, name_proposal_data, institute):
+    matched_publications = []
+    unmatched_publications = []
+
+    for pub in publications:
+        matched = False
+        for author_to_check in name_proposal_data:
+            if author_to_check in pub.author_names:
+                idx = pub.author_names.index(author_to_check)
+                candidate_author = pub.author_objects[idx]
+                if candidate_author.affiliations is not None:
+                    for affiliation in candidate_author.affiliations:
+                        if affiliation == institute:
+                            matched_publications.append(pub)
+                            matched = True
+                            break
+            if matched:
+                break
+        if not matched:
+            unmatched_publications.append(pub)
+    return matched_publications, unmatched_publications
+
+def get_clickable_links(publications):
+    clickable_links = []
+    for i in range(math.ceil(len(publications) / 100)):
+        print(100 * i, 100 * (i + 1))
+        print(len(publications[100 * i:100 * (i + 1)]))
+
+        clickalbe_link = get_publication_query(
+            publications[100 * i:100 * (i + 1)], clickable=True)
+        clickable_links.append(clickalbe_link)
+    return clickable_links
