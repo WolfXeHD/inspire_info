@@ -5,3 +5,4 @@ __email__ = 'tim.wolf@mpi-hd.mpg.de'
 __version__ = '0.1.0'
 
 from .myutils import *
+from .LatexCreator import *
