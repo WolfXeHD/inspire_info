@@ -1,4 +1,7 @@
 institute: "Heidelberg, Max Planck Inst."
+
+# lower_date and upper_date defined here is only used
+# to generate the cache file
 lower_date: '2006-01-01'
 upper_date: null
 size: 500
@@ -20,6 +23,9 @@ keywords:
   - "neutrino: oscillation"
   - "neutrino: mixing"
   - "double-beta decay"
+  - "symmetry breaking"
+  - "Higgs particle: mass"
+  - "renormalization group"
 
 people_to_exclude:
   - "Blaum"
