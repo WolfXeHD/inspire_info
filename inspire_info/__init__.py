@@ -6,3 +6,5 @@ __version__ = '0.1.0'
 
 from .myutils import *
 from .LatexCreator import *
+from .Author import *
+from .Publication import *

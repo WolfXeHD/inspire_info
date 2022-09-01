@@ -191,8 +191,8 @@ def get_tarball_of_publications(publications, link_type, target_dir):
     for pub in publications:
         link = pub.links[link_type]
         ids.append(pub.id)
-        cmd = "wget -P {target_dir} {link}".format(
-            target_dir=target_dir, link=link)
+        cmd = "wget -P {target_dir} {link}".format(target_dir=target_dir,
+                                                   link=link)
         os.system(cmd)
     else:
         print("Downloaded {} publication files".format(len(ids)))
@@ -202,12 +202,16 @@ def get_tarball_of_publications(publications, link_type, target_dir):
     cmd = "tar -czvf {tarball_name} -C {target_dir} .".format(
         tarball_name=tarball_name, target_dir=target_dir)
     os.system(cmd)
-        
+
 
 def convert_to_pandas(data):
     df = pd.DataFrame(data["hits"]["hits"])
-    updated_date = df.apply(lambda row: datetime.datetime.strptime(row["updated"], "%Y-%m-%dT%H:%M:%S.%f+00:00"), axis=1)
-    created_date = df.apply(lambda row: datetime.datetime.strptime(row["created"][:4], "%Y"), axis=1)
+    updated_date = df.apply(lambda row: datetime.datetime.strptime(
+        row["updated"], "%Y-%m-%dT%H:%M:%S.%f+00:00"),
+                            axis=1)
+    created_date = df.apply(
+        lambda row: datetime.datetime.strptime(row["created"][:4], "%Y"),
+        axis=1)
     df["updated_date"] = pd.to_datetime(updated_date)
     df["created_date"] = pd.to_datetime(created_date)
     earliest_date = df.apply(lambda row: get_earliest_date(row=row), axis=1)
@@ -216,64 +220,5 @@ def convert_to_pandas(data):
 
 
 class InspireInfo(object):
-
     def __init__(self, data):
         self.data = data
-
-
-class Publication(object):
-
-    def __init__(self, publication):
-        self.publication = publication
-        self.meta = publication["metadata"]
-        self.links = publication["links"]
-        self.created = publication["created"]
-        self.updated = publication["updated"]
-
-        self.authors = self.meta["authors"]
-        self.author_objects = [Author(author) for author in self.authors]
-        self.author_names = [auth.full_name for auth in self.author_objects]
-        self.id = publication["id"]
-        self.earliest_date = self.meta["earliest_date"]
-        self.title = self.meta["titles"][0]["title"]
-        if "-" in self.earliest_date:
-            self.earliest_date = self.earliest_date.split("-")[0]
-
-        datetime_object = datetime.datetime.strptime(self.earliest_date, '%Y')
-        self.earliest_date_year = datetime_object.year
-
-    def __repr__(self):
-        return "Publication(" + self.title + ")"
-
-    @property
-    def keywords(self):
-        if "keywords" in self.meta:
-            return [item["value"].lower() for item in self.meta["keywords"]]
-        else:
-            return None
-
-
-class Author(object):
-
-    def __init__(self, author):
-        self.author = author
-        self.full_name = author["full_name"]
-
-    @property
-    def affiliations(self):
-        if "affiliations" in self.author.keys():
-            affiliations = [
-                affiliation["value"]
-                for affiliation in self.author["affiliations"]
-            ]
-        elif "raw_affiliations" in self.author.keys():
-            affiliations = [
-                affiliation["value"]
-                for affiliation in self.author["raw_affiliations"]
-            ]
-        else:
-            affiliations = None
-        return affiliations
-
-    def __repr__(self):
-        return "Author(" + self.full_name + ")"
