@@ -25,8 +25,32 @@ def parse_args(args):
                         type=str,
                         help="Names of the people to match",
                         default=None)
+    parser.add_argument(
+        '--retrieve',
+        action='store_true',
+        help="""If added API-call is created, otherwise 
+            cache-file is going to be used."""
+    )
+    parser.add_argument(
+        '--lower_date',
+        type=str,
+        help="String to execute further specifications on the database",
+        required=True)
 
-    return dict(vars(parser.parse_args(args)))
+    parser.add_argument(
+        '--upper_date',
+        type=str,
+        help="String to execute further specifications on the database",
+        required=True)
+
+    parsed_args = parser.parse_args(args)
+
+    if parsed_args.lower_date == 'None':
+        parsed_args.lower_date = None
+    if parsed_args.upper_date == 'None':
+        parsed_args.upper_date = None
+
+    return dict(vars(parsed_args))
 
 
 def main(arguments):
@@ -36,24 +60,26 @@ def main(arguments):
                                                       "_name_proposal.txt")
     else:
         name_proposal = parsed_args["use_custom_name_proposal"]
-
-    config = inspire_info.read_config(parsed_args["config"])
     with open(name_proposal, "r") as f:
         names = f.read().splitlines()
 
     config = inspire_info.read_config(parsed_args["config"])
+
     size = config["size"]
-    keywords_to_check = config["keywords"]
-    lower_date = config["lower_date"]
-    upper_date = config["upper_date"]
+
+    lower_date = parsed_args["lower_date"]
+    upper_date = parsed_args["upper_date"]
+    print("Overwriting lower_date and upper_date in config with: {} {}".format(
+        lower_date, upper_date))
+
+    config["lower_date"] = lower_date
+    config["upper_date"] = upper_date
+
     institute = config["institute"]
     config_path = os.path.abspath(parsed_args["config"])
-    cache_file = config_path.replace(".yaml", ".json")
+    cache_file = config_path.replace(".yaml", ".pkl")
     config["cache_file"] = cache_file
     name_proposal = config_path.replace(".yaml", "_name_proposal.txt")
-
-    with open(name_proposal, "r") as f:
-        names = f.read().splitlines()
 
     # get the inspire id of the institute
     institute_and_time_query = inspire_info.build_query_template(
@@ -62,15 +88,16 @@ def main(arguments):
     global_query = institute_and_time_query.format(page='1',
                                                    size=str(size),
                                                    institute=quote(institute))
+    print(global_query)
 
     data = inspire_info.get_data(
         global_query=global_query,
-        retrieve=False,
+        retrieve=parsed_args["retrieve"],
         institute_and_time_query=institute_and_time_query,
         config=config)
 
-
     matched_publications = []
+    unmatched_publications = []
     for publication in data["hits"]["hits"]:
         pub = inspire_info.Publication(publication)
         matched = False
@@ -87,17 +114,8 @@ def main(arguments):
                             break
             if matched:
                 break
-
-    #  #  non_matched_keywords = []
-    #  for pub in matched_publications:
-    #      pub.keywords
-    #      #  if len(pub.author_names) > 2000:
-    #      #      __import__('ipdb').set_trace()
-    #      #  if pub.keywords is not None:
-    #      #      intersection_set = list(set.intersection(set(pub.keywords), set(keywords_to_check)))
-    #      #      if len(intersection_set) == 0:
-    #      #          non_matched_keywords += pub.keywords
-    #  #
+        if not matched:
+            unmatched_publications.append(pub)
 
     for i in range(math.ceil(len(matched_publications) / 100)):
         print(100 * i, 100 * (i + 1))
@@ -109,6 +127,15 @@ def main(arguments):
         print(clickalbe_link)
         print()
         print()
+
+    # inspire_info.get_tarball_of_publications(matched_publications, link_type="bibtex", target_dir="publications_bibtex")
+
+
+    # print("Unmatched publications")
+    # print(unmatched_publications)
+    # clickalbe_link = inspire_info.get_publication_query(
+    #     matched_publications, clickable=True)
+    # print(clickalbe_link)
 
 
 if __name__ == "__main__":
