@@ -4,3 +4,11 @@ __pycache__/*
 *.json
 .session.vim
 data/*
+*?format*
+*.aux
+*.bbl
+*.blg
+*.log
+*.tex
+*.tar.gz
+*.pdf
