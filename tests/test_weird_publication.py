@@ -1,5 +1,5 @@
 import json
-import myutils
+import inspire_info.myutils as myutils
 
 query = "https://inspirehep.net/api/literature/346986"
 
