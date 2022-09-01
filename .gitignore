@@ -14,3 +14,8 @@ data/*
 *.pdf
 *.bib
 *.pkl
+*cython*
+tests/__pycache__/__init__.cpython-38.pyc
+tests/__pycache__/test_specific_pub.cpython-38-pytest-6.2.4.pyc
+tests/__pycache__/test_inspire_info.cpython-38-pytest-6.2.4.pyc
+tests/__pycache__/test_weird_publication.cpython-38-pytest-6.2.4.pyc
