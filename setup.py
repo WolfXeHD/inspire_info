@@ -35,6 +35,7 @@ setup(
             'ii_create_cache_file=inspire_info.scripts.create_cache_file:main',
             'ii_search_authors_and_download=inspire_info.scripts.search_authors_and_download:main',
             'ii_create_latex_doc=inspire_info.scripts.create_latex_doc:main',
+            'ii_merge_bibtex_files=inspire_info.scripts.merge_bibtex_files:main',
         ],
     },
     install_requires=requirements,
