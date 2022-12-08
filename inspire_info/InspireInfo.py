@@ -38,6 +38,12 @@ class InspireInfo(object):
             page='1', size=str(self.config["size"]), institute=quote(self.config["institute"]))
 
     def get_data(self, retrieve=False):
+        """This function retrievs the inspire data and stores it in self.data, which is a dictionary. It also creates a list of Publication objects, which are stored in self.publications. The Publication objects are created from the data in self.data.
+        The query which is executed consists of the query for the institute and the time. No keywords are used for this query.
+
+        Args:
+            retrieve (bool, optional): This option allows to read the data from a cache-file (False) or execute a query to inspire (True). Defaults to False.
+        """
         self.data = myutils.get_data(
             global_query=self.global_query,
             retrieve=retrieve,
@@ -50,15 +56,30 @@ class InspireInfo(object):
         self.publications = [Publication(pub) for pub in self.data["hits"]["hits"]]
 
     def write_data(self):
+        """Writes the data stored in self.data to a cache-file, named self.cache_file.
+        """
         myutils.write_data(data=self.data, filename=self.cache_file)
 
     def write_name_proposal(self):
+        """Writes the name data in self.name_proposal_data to a file, named self.name_proposal.
+        """
         print("Writing out", self.name_proposal)
         with open(self.name_proposal, "w") as f:
             for name in sorted(self.name_proposal_data):
                 f.write(name + "\n")
 
     def match_publications_by_keywords(self, keywords=None):
+        """The list of publications is matched by keywords, either specified as input (keywors) or read from the config file (self.config["keywords"])
+
+        Args:
+            keywords (list, optional): List of keywords for which the division of publications should be carried out. Defaults to None.
+
+        Returns:
+            tuple: (publications_without_keywords, matched_publications, unmatched_publications), where
+            publications_without_keywords is a list of publications which do not have any keywords,
+            matched_publications is a list of publications which have at least one keyword in common with the input keywords/keywords from the config file,
+            unmatched_publications is a list of publications which do not have any keywords in common with the input keywords/keywords from the config file.
+        """
         if not self.has_data:
             self.get_data()
 
@@ -71,6 +92,14 @@ class InspireInfo(object):
         return self.publications_without_keywords, self.matched_publications, self.unmatched_publications
 
     def match_authors(self, publications):
+        """This function allows to find the authors of a list of publications which match the institute and excludes people_to_exclude specified in the config file.
+
+        Args:
+            publications (Publication): List of publications among which the authors should be found.
+
+        Returns:
+            list: List of authors' full name which match the institute and are not in people_to_exclude.
+        """
         matched_authors = myutils.get_matched_authors(publications=publications,
                                                  institute=self.config["institute"],
                                                  people_to_exclude=self.config["people_to_exclude"])
@@ -78,6 +107,17 @@ class InspireInfo(object):
         return matched_authors
 
     def get_clickable_links(self, match_type):
+        """This function generates clickalbe links for an inspire query in the browser
+
+        Args:
+            match_type (str): One of "matched", "unmatched", "no_keywords". Depending on the value, the function returns clickable links for the matched publications, unmatched publications or publications without keywords.
+
+        Raises:
+            ValueError: Raised if input match_type is not one of "matched", "unmatched", "no_keywords".
+
+        Returns:
+            str: Clickable links for the inspire query in the browser.
+        """
         if match_type not in ["matched", "unmatched", "no_keywords"]:
             raise ValueError("match_type must be one of ['matched', 'unmatched', 'no_keywords']")
 
@@ -88,11 +128,14 @@ class InspireInfo(object):
         else:
             if hasattr(self, "publications_without_keywords"):
                 publications = self.publications_without_keywords
-            else:
-                raise ValueError("No publications_without_keywords found")
         return myutils.get_clickable_links(publications=publications)
 
     def print_clickable_links(self, match_type):
+        """Executes get_clickable_links and prints the result.
+
+        Args:
+            match_type (str): One of "matched", "unmatched", "no_keywords". Depending on the value, the function returns clickable links for the matched publications, unmatched publications or publications without keywords.
+        """
         clickable_links = self.get_clickable_links(match_type)
         for idx, link in enumerate(clickable_links):
             print("LINK:", idx)
