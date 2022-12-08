@@ -1,10 +1,11 @@
+#!/usr/bin/env python
+
 __author__ = 'Tim Michael Heinz Wolf'
 __version__ = '0.0'
 __license__ = 'GPL'
 __email__ = 'tim.wolf@mpi-hd.mpg.de'
 
 import argparse
-import sys
 from inspire_info import LatexCreator
 
 def parse_args():

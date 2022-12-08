@@ -1,9 +1,15 @@
+#!/usr/bin/env python
+
+__author__ = 'Tim Michael Heinz Wolf'
+__version__ = '0.0'
+__license__ = 'GPL'
+__email__ = 'tim.wolf@mpi-hd.mpg.de'
+
 import inspire_info
 import json
 import os
 import tqdm
 import argparse
-import sys
 
 
 def parse_args():
