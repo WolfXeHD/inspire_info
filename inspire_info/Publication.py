@@ -13,6 +13,8 @@ class Publication(object):
         self.authors = self.meta["authors"]
         self.author_objects = [Author(author) for author in self.authors]
         self.author_names = [auth.full_name for auth in self.author_objects]
+        self.author_uuids = [auth.uuid for auth in self.author_objects]
+        self.author_bais = [auth.bai for auth in self.author_objects]
         self.id = publication["id"]
         self.earliest_date = self.meta["earliest_date"]
         self.title = self.meta["titles"][0]["title"]

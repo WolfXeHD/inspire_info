@@ -4,10 +4,10 @@ import logging as log
 
 
 class LatexCreator:
-    def __init__(self, template, outdir, folder):
+    def __init__(self, template, outdir, source_folder):
         self.template = template
         self.outdir = outdir
-        self.folder = folder
+        self.source_folder = source_folder
         self.keys = None
 
         ensure_dirs(dirs=[self.outdir])
@@ -19,8 +19,8 @@ class LatexCreator:
                          outdir=self.outdir)
 
     def make_bibliography(self, filename="references.bib"):
-        log.info("Creating bibliography of folder {}".format(self.folder))
-        self.keys = make_bibliography(folder=self.folder,
+        log.info("Creating bibliography of source_folder {}".format(self.source_folder))
+        self.keys = make_bibliography(source_folder=self.source_folder,
                                       outdir=self.outdir,
                                       filename=filename)
         log.info("Created bibliography in file {}".format(
@@ -33,9 +33,9 @@ def ensure_dirs(dirs):
             os.makedirs(dir)
 
 
-def make_bibliography(folder, outdir, filename="references.bib"):
+def make_bibliography(source_folder, outdir, filename="references.bib"):
     keys = []
-    files = glob.glob(folder + "/*")
+    files = glob.glob(source_folder + "/*")
 
     combined_data = ""
     for file in files:

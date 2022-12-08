@@ -5,20 +5,12 @@ __email__ = 'tim.wolf@mpi-hd.mpg.de'
 
 import sys
 import argparse
-from urllib.parse import quote
 from inspire_info.InspireInfo import InspireInfo
 
 
 def parse_args(args):
     parser = argparse.ArgumentParser(
         description='Scraping of inspire for institute publications')
-    parser.add_argument(
-        '--get_links',
-        action='store_true',
-        help="Prints the inspire quieries to the found publications")
-    parser.add_argument('--create_cache',
-                        action='store_true',
-                        help="Create the cache-file")
     parser.add_argument('--config',
                         type=str,
                         help="Config file to read.",

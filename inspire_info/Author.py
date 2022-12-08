@@ -4,6 +4,7 @@ class Author(object):
     def __init__(self, author):
         self.author = author
         self.full_name = author["full_name"]
+        self.uuid = author["uuid"]
 
     @property
     def affiliations(self):
@@ -20,6 +21,15 @@ class Author(object):
         else:
             affiliations = None
         return affiliations
+
+    @property
+    def bai(self):
+        if "ids" in self.author.keys():
+            for id in self.author["ids"]:
+                if id["schema"] == "INSPIRE BAI":
+                    return id["value"]
+        return None
+
 
     def __repr__(self):
         return "Author(" + self.full_name + ")"

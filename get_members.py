@@ -7,22 +7,15 @@ from tkinter import W
 from inspire_info.InspireInfo import InspireInfo
 import sys
 import argparse
-from urllib.parse import quote
-import inspire_info
-import math
-import os
-import tqdm
 
 
 def parse_args(args):
     parser = argparse.ArgumentParser(
         description='Scraping of inspire for institute publications')
-    parser.add_argument(
-        '--retrieve',
-        action='store_true',
-        help="""If added API-call is created, otherwise 
-            cache-file is going to be used."""
-    )
+    parser.add_argument('--retrieve',
+                        action='store_true',
+                        help="""If added API-call is created, otherwise 
+            cache-file is going to be used.""")
     parser.add_argument(
         '--get_links',
         action='store_true',
@@ -46,8 +39,10 @@ def main(arguments):
 
     inspire_getter = InspireInfo(config_path=parsed_args["config"])
     inspire_getter.get_data(retrieve=parsed_args["retrieve"])
-    _, matched_publications, _ = inspire_getter.match_publications_by_keywords()
-    all_authors_from_institution_named = inspire_getter.match_authors(matched_publications)
+    _, matched_publications, _ = inspire_getter.match_publications_by_keywords(
+    )
+    all_authors_from_institution_named = inspire_getter.match_authors(
+        matched_publications)
     inspire_getter.name_proposal_data = all_authors_from_institution_named
     inspire_getter.write_name_proposal()
 

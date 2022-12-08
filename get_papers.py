@@ -3,45 +3,51 @@ __version__ = '0.0'
 __license__ = 'GPL'
 __email__ = 'tim.wolf@mpi-hd.mpg.de'
 
-from ast import parse
 import sys
 import argparse
-import inspire_info
-from urllib.parse import quote
-import os
-import math
+import glob
 from inspire_info.InspireInfo import InspireInfo
+import inspire_info
+import os
+
 
 
 def parse_args(args):
     parser = argparse.ArgumentParser(
         description='Scraping of inspire for institute publications')
-    parser.add_argument('--name_proposal',
-                        action='store_true',
-                        help="Write out name_proposal.txt")
     parser.add_argument('--config',
                         type=str,
                         help="Config file to read.",
                         required=True)
-    parser.add_argument('--use_custom_name_proposal',
-                        type=str,
-                        help="Names of the people to match",
-                        default=None)
-    parser.add_argument('--retrieve',
-                        action='store_true',
-                        help="""If added API-call is created, otherwise
-            cache-file is going to be used.""")
     parser.add_argument(
         '--lower_date',
         type=str,
         help="String to execute further specifications on the database",
         required=True)
-
     parser.add_argument(
         '--upper_date',
         type=str,
         help="String to execute further specifications on the database",
         required=True)
+
+    parser.add_argument('--authors_output_dir',
+                        type=str,
+                        help="Directory to save the output.",
+                        default="authors")
+
+    parser.add_argument('--download',
+                        type=str,
+                        help="Type of file to be downloaded from inspire",
+                        choices=[
+                            'bibtex', 'latex-eu', 'latex-us', 'json', 'cv',
+                            'citations', 'None'
+                        ],
+                        default="None")
+
+    parser.add_argument("--target_dir",
+                        type=str,
+                        help="Directory to save the output.",
+                        default=None)
 
     parsed_args = parser.parse_args(args)
 
@@ -57,8 +63,6 @@ def main(arguments):
     parsed_args = parse_args(args=arguments)
     inspire_getter = InspireInfo(config_path=parsed_args["config"])
 
-    if parsed_args["use_custom_name_proposal"] is not None:
-        inspire_getter.name_proposal = parsed_args["use_custom_name_proposal"]
 
     print("Overwriting lower_date and upper_date in config with: {} {}".format(
         parsed_args["lower_date"], parsed_args["upper_date"]))
@@ -66,10 +70,24 @@ def main(arguments):
     inspire_getter.config["lower_date"] = parsed_args["lower_date"]
     inspire_getter.config["upper_date"] = parsed_args["upper_date"]
     inspire_getter.get_data()
-    inspire_getter.read_name_proposal()
-    inspire_getter.match_publications_by_authors()
 
+    filelist_query = os.path.join(parsed_args["authors_output_dir"], "*.txt")
+    filelist = glob.glob(filelist_query)
+    print("Found {} files in {}".format(len(filelist), parsed_args["authors_output_dir"]))
+
+    bais_to_check = inspire_info.myutils.get_inspire_bais_from_filelist(filelist)
+    inspire_getter.match_publications_by_authors(bais_to_check)
     inspire_getter.print_clickable_links(match_type="matched")
+
+    missing_publications = inspire_getter.check_missing_publications_on_disk(
+        inspire_getter.matched_publications, link_type=parsed_args["download"])
+
+    if parsed_args["download"] != "None":
+        inspire_getter.download_publications(
+            publications=missing_publications,
+            link_type=parsed_args["download"],
+            target_dir=parsed_args["target_dir"]
+            )
 
 if __name__ == "__main__":
     main(sys.argv[1:])

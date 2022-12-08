@@ -4,18 +4,21 @@ institute: "Heidelberg, Max Planck Inst."
 # to generate the cache file
 lower_date: '2006-01-01'
 upper_date: null
-size: 500
+size: 200 # 500 is also a good value but bad internet connection may cause problems
 
 keywords:
   - "neutrino"
   - "bsm"
   - "darkmatter"
+  - "Dark Matter"
   - "dm"
   - "double beta decay"
   - "double chooz"
+  - "Double beta decay"
   - "conus"
   - "stereo"
   - "xenon"
+  - "XENON"
   - "darwin"
   - "borexino"
   - "gerda"
