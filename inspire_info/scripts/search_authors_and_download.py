@@ -6,7 +6,7 @@ import argparse
 import sys
 
 
-def parse_args(args):
+def parse_args():
     parser = argparse.ArgumentParser(
         description='Command line tool to search for authors in inspire')
     parser.add_argument('--search_name',
@@ -23,10 +23,10 @@ def parse_args(args):
                         help="Directory to save the output.",
                         default="authors")
 
-    return dict(vars(parser.parse_args(args)))
+    return dict(vars(parser.parse_args()))
 
 def main():
-    parsed_args = parse_args(sys.argv[1:])
+    parsed_args = parse_args()
     if parsed_args['search_name'] is None and parsed_args['custom_name_proposal'] is None:
         raise ValueError("Please provide a search name or a custom name proposal.")
 

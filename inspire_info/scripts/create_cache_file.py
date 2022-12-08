@@ -3,12 +3,11 @@ __version__ = '0.0'
 __license__ = 'GPL'
 __email__ = 'tim.wolf@mpi-hd.mpg.de'
 
-import sys
 import argparse
 from inspire_info.InspireInfo import InspireInfo
 
 
-def parse_args(args):
+def parse_args():
     parser = argparse.ArgumentParser(
         description='Scraping of inspire for institute publications')
     parser.add_argument('--config',
@@ -16,14 +15,14 @@ def parse_args(args):
                         help="Config file to read.",
                         required=True)
 
-    return dict(vars(parser.parse_args(args)))
+    return dict(vars(parser.parse_args()))
 
 
-def main(arguments):
-    parsed_args = parse_args(args=arguments)
+def main():
+    parsed_args = parse_args()
     inspire_getter = InspireInfo(config_path=parsed_args["config"])
     inspire_getter.get_data(retrieve=True)
     inspire_getter.write_data()
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    main()

@@ -3,7 +3,6 @@ __version__ = '0.0'
 __license__ = 'GPL'
 __email__ = 'tim.wolf@mpi-hd.mpg.de'
 
-import sys
 import argparse
 import glob
 from inspire_info.InspireInfo import InspireInfo
@@ -12,7 +11,7 @@ import os
 
 
 
-def parse_args(args):
+def parse_args():
     parser = argparse.ArgumentParser(
         description='Scraping of inspire for institute publications')
     parser.add_argument('--config',
@@ -49,7 +48,7 @@ def parse_args(args):
                         help="Directory to save the output.",
                         default=None)
 
-    parsed_args = parser.parse_args(args)
+    parsed_args = parser.parse_args()
 
     if parsed_args.lower_date == 'None':
         parsed_args.lower_date = None
@@ -59,8 +58,8 @@ def parse_args(args):
     return dict(vars(parsed_args))
 
 
-def main(arguments):
-    parsed_args = parse_args(args=arguments)
+def main():
+    parsed_args = parse_args()
     inspire_getter = InspireInfo(config_path=parsed_args["config"])
 
 
@@ -90,4 +89,4 @@ def main(arguments):
             )
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    main()

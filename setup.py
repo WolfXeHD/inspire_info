@@ -31,7 +31,10 @@ setup(
     description="Package to retrieve more complex info from inspire than the web-interface allows",
     entry_points={
         'console_scripts': [
-            'inspire_info=inspire_info.cli:main',
+            'ii_get_papers=inspire_info.scripts.get_papers:main',
+            'ii_create_cache_file=inspire_info.scripts.create_cache_file:main',
+            'ii_search_authors_and_download=inspire_info.scripts.search_authors_and_download:main',
+            'ii_create_latex_doc=inspire_info.scripts.create_latex_doc:main',
         ],
     },
     install_requires=requirements,

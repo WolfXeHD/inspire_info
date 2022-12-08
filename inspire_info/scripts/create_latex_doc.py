@@ -7,7 +7,7 @@ import argparse
 import sys
 from inspire_info import LatexCreator
 
-def parse_args(args):
+def parse_args():
     parser = argparse.ArgumentParser(
         description='Command line tool to search for authors in inspire')
     parser.add_argument('--source_dir',
@@ -21,7 +21,7 @@ def parse_args(args):
                         required=True
                         )
 
-    return dict(vars(parser.parse_args(args)))
+    return dict(vars(parser.parse_args()))
 
 template = r"""\documentclass[11pt]{article}
 
@@ -51,11 +51,14 @@ __NOCITES__
 \end{document}
 """
 
-
-if __name__ == "__main__":
-    parsed_args = parse_args(sys.argv[1:])
+def main():
+    parsed_args = parse_args()
     document_maker = LatexCreator(template=template,
                                   outdir=parsed_args['output_dir'],
                                   source_folder=parsed_args["source_dir"])
     document_maker.make_bibliography()
     document_maker.create_latex_doc(filename="publications.tex")
+
+
+if __name__ == "__main__":
+    main()
