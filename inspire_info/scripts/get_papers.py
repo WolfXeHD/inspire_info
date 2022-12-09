@@ -7,10 +7,10 @@ __email__ = 'tim.wolf@mpi-hd.mpg.de'
 
 import argparse
 import glob
-from inspire_info.InspireInfo import InspireInfo
-import inspire_info
 import os
 
+import inspire_info
+from inspire_info.InspireInfo import InspireInfo
 
 
 def parse_args():
@@ -60,35 +60,38 @@ def parse_args():
     return dict(vars(parsed_args))
 
 
-def main():
-    parsed_args = parse_args()
-    inspire_getter = InspireInfo(config_path=parsed_args["config"])
-
+def get_papers(config, lower_date, upper_date, authors_output_dir, download, target_dir):
+    inspire_getter = InspireInfo(config_path=config)
 
     print("Overwriting lower_date and upper_date in config with: {} {}".format(
-        parsed_args["lower_date"], parsed_args["upper_date"]))
+        lower_date, upper_date))
 
-    inspire_getter.config["lower_date"] = parsed_args["lower_date"]
-    inspire_getter.config["upper_date"] = parsed_args["upper_date"]
+    inspire_getter.config["lower_date"] = lower_date
+    inspire_getter.config["upper_date"] = upper_date
     inspire_getter.get_data()
 
-    filelist_query = os.path.join(parsed_args["authors_output_dir"], "*.txt")
+    filelist_query = os.path.join(authors_output_dir, "*.txt")
     filelist = glob.glob(filelist_query)
-    print("Found {} files in {}".format(len(filelist), parsed_args["authors_output_dir"]))
+    print("Found {} files in {}".format(len(filelist), authors_output_dir))
 
     bais_to_check = inspire_info.myutils.get_inspire_bais_from_filelist(filelist)
     inspire_getter.match_publications_by_authors(bais_to_check)
     inspire_getter.print_clickable_links(match_type="matched")
 
     missing_publications = inspire_getter.check_missing_publications_on_disk(
-        inspire_getter.matched_publications, link_type=parsed_args["download"])
+        inspire_getter.matched_publications, link_type=download, target_dir=target_dir)
 
-    if parsed_args["download"] != "None":
+    if download != "None":
         inspire_getter.download_publications(
             publications=missing_publications,
-            link_type=parsed_args["download"],
-            target_dir=parsed_args["target_dir"]
+            link_type=download,
+            target_dir=target_dir
             )
+
+
+def main():
+    parsed_args = parse_args()
+    get_papers(**parsed_args)
 
 if __name__ == "__main__":
     main()

@@ -59,8 +59,7 @@ def get_publication_by_id(id_list, size=500):
     id_query = ""
     for id in id_list:
         id_query += id_template.format(id=id)
-    else:
-        id_query = id_query[:-4]
+    id_query = id_query[:-4]
     id_query = id_query.replace(" ", "%20")
     return other_query.format(page='1', size=size) + id_query
 
@@ -158,8 +157,7 @@ def get_data(global_query, retrieve, institute_and_time_query, config):
                     institute=quote(config["institute"]))
                 temp_data = read_from_inspire(formatted_query=this_query)
                 data["hits"]["hits"] += temp_data["hits"]["hits"]
-        else:
-            data, df = apply_cleaning_to_data(data=data, config=config)
+        data, df = apply_cleaning_to_data(data=data, config=config)
     else:
         data = read_data(filename=config["cache_file"])
         data, df = apply_cleaning_to_data(data=data, config=config)
@@ -259,13 +257,13 @@ def match_publications_by_keywords(publications, keywords):
             continue
     return publications_without_keywords, matched_publications, unmatched_publications
 
-def match_publications_by_authors(publications, name_proposal_data, institute):
+def match_publications_by_authors(publications, bais_to_check_against, institute):
     matched_publications = []
     unmatched_publications = []
 
     for pub in publications:
         matched = False
-        for author_to_check in name_proposal_data:
+        for author_to_check in bais_to_check_against:
             if author_to_check in pub.author_bais:
                 idx = pub.author_bais.index(author_to_check)
                 candidate_author = pub.author_objects[idx]
@@ -296,6 +294,7 @@ def check_missing_publications_on_disk(publications, target_dir, link_type):
     missing_publications = []
     for pub in publications:
         path_to_check = os.path.join(target_dir, pub.id + "?format={}".format(link_type))
+        print(path_to_check)
         if not os.path.exists(path_to_check):
             missing_publications.append(pub)
     return missing_publications

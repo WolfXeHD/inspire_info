@@ -4,15 +4,18 @@ import logging as log
 
 
 class LatexCreator:
-    def __init__(self, template, outdir, source_folder):
+    def __init__(self, template, outdir, source_folder, filename):
         self.template = template
         self.outdir = outdir
         self.source_folder = source_folder
         self.keys = None
+        self.filename = filename
 
         ensure_dirs(dirs=[self.outdir])
 
-    def create_latex_doc(self, filename):
+    def create_latex_doc(self, filename=None):
+        if filename is None:
+            filename = self.filename
         create_latex_doc(template=self.template,
                          keys=self.keys,
                          filename=filename,
@@ -56,6 +59,9 @@ def make_bibliography(source_folder, outdir, filename="references.bib"):
 
 def create_latex_doc(template, keys, filename, outdir):
     cwd = os.getcwd()
+    if not os.path.exists(outdir):
+        os.makedirs(outdir)
+
     os.chdir(outdir)
     nocite_string = ""
     for key in keys:

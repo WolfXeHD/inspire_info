@@ -6,6 +6,7 @@ __license__ = 'MIT'
 __email__ = 'tim.wolf@mpi-hd.mpg.de'
 
 import argparse
+import os
 from inspire_info import LatexCreator
 
 def parse_args():
@@ -21,26 +22,33 @@ def parse_args():
                         help="Directory where the latex-output is stored.",
                         required=True
                         )
+    parser.add_argument('--filename',
+                        type=str,
+                        help="Filename of the latex-output.",
+                        default="publications.tex"
+                        )
 
     return dict(vars(parser.parse_args()))
 
 template = r"""\documentclass[11pt]{article}
 
-\title{Multiple Bibliographies with \texttt{multibib}}
+\title{Bibliography}
 \author{Tim Wolf}
 \date{}
 
-\usepackage[resetlabels,labeled]{multibib}
-\newcites{Math}{Math Readings}
-\newcites{Phys}{Physics Readings}
+%\usepackage[resetlabels,labeled]{multibib}
+% \usepackage{bibtex}
+% \newcites{Math}{Math Readings}
+% \newcites{Phys}{Physics Readings}
+
 
 \begin{document}
 
-\maketitle
+% \maketitle
 
 __NOCITES__
 
-\bibliographystyle{unsrt}
+\bibliographystyle{abbrv}
 \bibliography{references}
 
 % \bibliographystyleMath{unsrt}
@@ -52,13 +60,19 @@ __NOCITES__
 \end{document}
 """
 
+def create_latex_doc(template, output_dir, source_dir, filename):
+    document_maker = LatexCreator(template=template,
+                                  outdir=output_dir,
+                                  source_folder=source_dir,
+                                  filename=filename)
+    document_maker.make_bibliography()
+
+    document_maker.create_latex_doc()
+
 def main():
     parsed_args = parse_args()
-    document_maker = LatexCreator(template=template,
-                                  outdir=parsed_args['output_dir'],
-                                  source_folder=parsed_args["source_dir"])
-    document_maker.make_bibliography()
-    document_maker.create_latex_doc(filename="publications.tex")
+    parsed_args["template"] = template
+    create_latex_doc(**parsed_args)
 
 
 if __name__ == "__main__":
