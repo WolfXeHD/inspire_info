@@ -16,9 +16,14 @@ from itertools import compress
 
 
 def read_config(file_to_read):
-    with open(file_to_read, "r") as f:
+    with open(file_to_read, "r", encoding='ISO-8859-1') as f:
         config = yaml.load(f, Loader=yaml.SafeLoader)
     return config
+
+def read_authors(authors_file):
+    with open(authors_file, "r", encoding='unicode-escape') as f:
+        authors = [line.strip() for line in f]
+    return authors
 
 
 def read_from_inspire(formatted_query, silent=False):
@@ -33,10 +38,9 @@ def read_from_inspire(formatted_query, silent=False):
 
         response = requests.get(formatted_query)
         #  response.raise_for_status()  # raises exception when not a 2xx response
-    else:
-        data = response.json()
-        if not silent:
-            print("data retrieved.")
+    data = response.json()
+    if not silent:
+        print("data retrieved.")
     return data
 
 
@@ -99,16 +103,32 @@ def build_person_query(person, size=25, search_type="authors"):
     query_template = query_template.format(size=size, page=1)
     return query_template
 
-def build_query_template(lower_date, upper_date, add_institute=True, search_type="literature"):
+def build_query_template(lower_date, upper_date, add_institute=True, search_type="literature", add_collaborations=None):
     # building query command
-    institute_query = 'https://inspirehep.net/api/{search_type}?sort=mostrecent&size={size}&page={page}'
+    query = 'https://inspirehep.net/api/{search_type}?sort=mostrecent&size={size}&page={page}'
+    query += '&q=('
+
     if add_institute:
-        institute_query += "&q=aff:{institute}"
+        query += "aff:{institute}"
+
+    if add_collaborations is not None:
+        collaborations_query = " or ".join(["collaboration:" + collaboration for collaboration in add_collaborations])
+        collaborations_query = "(" + collaborations_query + ")"
+        if not add_institute:
+            query += collaborations_query + ")"
+        else:
+            query += " or " + collaborations_query + ")"
+    else:
+        query += ")"
+
     time_query = build_time_query(lower_date=lower_date, upper_date=upper_date)
     if time_query != "":
-        institute_and_time_query = institute_query + " and " + time_query
+        institute_and_time_query = query + " and " + time_query
     else:
-        institute_and_time_query = institute_query
+        institute_and_time_query = query
+
+    if institute_and_time_query.endswith("&q=()"):
+        institute_and_time_query = institute_and_time_query.replace("&q=()", "")
 
     matches = re.findall(r'\{(.*?)\}', institute_and_time_query)
     replace_dict = {}
@@ -145,7 +165,7 @@ def get_matched_authors(publications, institute, people_to_exclude):
 def get_data(global_query, retrieve, institute_and_time_query, config):
     if retrieve:
         # retrieving data
-        data = read_from_inspire(formatted_query=global_query)
+        data = read_from_inspire(formatted_query=global_query, silent=True)
         total_hits = data["hits"]["total"]
         n_pages = int(total_hits / int(config["size"])) + 1
         for i in tqdm.tqdm(range(n_pages)):
@@ -155,7 +175,7 @@ def get_data(global_query, retrieve, institute_and_time_query, config):
                     page=str(i + 1),
                     size=str(config["size"]),
                     institute=quote(config["institute"]))
-                temp_data = read_from_inspire(formatted_query=this_query)
+                temp_data = read_from_inspire(formatted_query=this_query, silent=True)
                 data["hits"]["hits"] += temp_data["hits"]["hits"]
         data, df = apply_cleaning_to_data(data=data, config=config)
     else:
@@ -257,28 +277,6 @@ def match_publications_by_keywords(publications, keywords):
             continue
     return publications_without_keywords, matched_publications, unmatched_publications
 
-def match_publications_by_authors(publications, bais_to_check_against, institute):
-    matched_publications = []
-    unmatched_publications = []
-
-    for pub in publications:
-        matched = False
-        for author_to_check in bais_to_check_against:
-            if author_to_check in pub.author_bais:
-                idx = pub.author_bais.index(author_to_check)
-                candidate_author = pub.author_objects[idx]
-                if candidate_author.affiliations is not None:
-                    for affiliation in candidate_author.affiliations:
-                        if affiliation == institute:
-                            matched_publications.append(pub)
-                            matched = True
-                            break
-            if matched:
-                break
-        if not matched:
-            unmatched_publications.append(pub)
-    return matched_publications, unmatched_publications
-
 def get_clickable_links(publications):
     clickable_links = []
     for i in range(math.ceil(len(publications) / 100)):
@@ -293,7 +291,7 @@ def get_clickable_links(publications):
 def check_missing_publications_on_disk(publications, target_dir, link_type):
     missing_publications = []
     for pub in publications:
-        path_to_check = os.path.join(target_dir, pub.id + "?format={}".format(link_type))
+        path_to_check = os.path.join(target_dir, pub.downloaded_file(link_type))
         print(path_to_check)
         if not os.path.exists(path_to_check):
             missing_publications.append(pub)
@@ -333,3 +331,8 @@ def get_inspire_bais_from_filelist(filelist):
     for file in filelist:
         l_bais += get_inspire_bai(file)
     return l_bais
+
+def ensure_dirs(dirs):
+    for dir in dirs:
+        if not os.path.exists(dir):
+            os.makedirs(dir)

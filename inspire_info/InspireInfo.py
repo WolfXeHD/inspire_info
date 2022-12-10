@@ -1,5 +1,7 @@
 import datetime
 import os
+import tqdm
+import json
 from urllib.parse import quote
 
 import inspire_info.myutils as myutils
@@ -13,11 +15,14 @@ class InspireInfo(object):
         self.has_data = False
         self.link_type = self.config.get("link_type", "bibtex")
         self.data = None
-        self.publications = None
-        self.publications_without_keywords = None
-        self.name_proposal_data = None
-        self.matched_publications = None
-        self.unmatched_publications = None
+        self.publications = []
+
+        self.authors = self.config["authors"]
+        self.authors_output_dir = self.config.get("authors_output_dir", "authors")
+        self.author_file_template = "author_{author}.txt"
+
+        self.collaborations = self.config["collaborations"]
+        self.earliest_date_collaboration_check = self.config["earliest_date_collaboration_check"]
 
         if "cache_file" not in self.config:
             self.cache_file = os.path.abspath(self.config_path).replace(
@@ -26,15 +31,13 @@ class InspireInfo(object):
             self.cache_file = self.config["cache_file"]
         self.config["cache_file"] = self.cache_file
 
-        if "name_proposal" not in self.config:
-            self.name_proposal = self.config_path.replace(".yaml",
-                                                          "_name_proposal.txt")
-        else:
-            self.name_proposal = self.config["name_proposal"]
 
         self.institute_and_time_query = myutils.build_query_template(
             lower_date=self.config["lower_date"],
-            upper_date=self.config["upper_date"])
+            upper_date=self.config["upper_date"],
+            add_collaborations=self.collaborations,
+            add_institute=True
+            )
 
         self.global_query = self.institute_and_time_query.format(
             page='1', size=str(self.config["size"]), institute=quote(self.config["institute"]))
@@ -48,6 +51,42 @@ class InspireInfo(object):
         """
         return os.path.exists(self.cache_file)
 
+    @property
+    def matched_publications(self):
+        """Returns the list of matched publications.
+
+        Returns:
+            list: List of Publication objects.
+        """
+        if self.publications is not None:
+            matched_publications = []
+            for pub in self.publications:
+                if pub.matched:
+                    matched_publications.append(pub)
+            return matched_publications
+        else:
+            return None
+
+    @property
+    def downloaded_bibtex_files(self):
+        files = []
+        for pub in self.matched_publications:
+            if pub.matched:
+                files.append(pub.downloaded_bibtex_file)
+        return files
+
+
+    @property
+    def author_bais(self):
+        filelist  =  []
+        for author in self.authors:
+            author_file = os.path.join(self.authors_output_dir, self.author_file_template.format(author=author))
+            filelist.append(author_file)
+
+        self.download_missing_authors()
+        bais_to_check = myutils.get_inspire_bais_from_filelist(filelist)
+        return bais_to_check
+
     def get_data(self, retrieve=False):
         """This function retrievs the inspire data and stores it in self.data, which is a dictionary. It also creates a list of Publication objects, which are stored in self.publications. The Publication objects are created from the data in self.data.
         The query which is executed consists of the query for the institute and the time. No keywords are used for this query.
@@ -55,6 +94,8 @@ class InspireInfo(object):
         Args:
             retrieve (bool, optional): This option allows to read the data from a cache-file (False) or execute a query to inspire (True). Defaults to False.
         """
+        if retrieve:
+            print("Retrieving data from inspire...")
         self.data = myutils.get_data(
             global_query=self.global_query,
             retrieve=retrieve,
@@ -71,37 +112,6 @@ class InspireInfo(object):
         """
         myutils.write_data(data=self.data, filename=self.cache_file)
 
-    def write_name_proposal(self):
-        """Writes the name data in self.name_proposal_data to a file, named self.name_proposal.
-        """
-        print("Writing out", self.name_proposal)
-        with open(self.name_proposal, "w") as f:
-            for name in sorted(self.name_proposal_data):
-                f.write(name + "\n")
-
-    def match_publications_by_keywords(self, keywords=None):
-        """The list of publications is matched by keywords, either specified as input (keywors) or read from the config file (self.config["keywords"])
-
-        Args:
-            keywords (list, optional): List of keywords for which the division of publications should be carried out. Defaults to None.
-
-        Returns:
-            tuple: (publications_without_keywords, matched_publications, unmatched_publications), where
-            publications_without_keywords is a list of publications which do not have any keywords,
-            matched_publications is a list of publications which have at least one keyword in common with the input keywords/keywords from the config file,
-            unmatched_publications is a list of publications which do not have any keywords in common with the input keywords/keywords from the config file.
-        """
-        if not self.has_data:
-            self.get_data()
-
-        if keywords is None:
-            keywords = self.config["keywords"]
-
-        self.publications_without_keywords, self.matched_publications, self.unmatched_publications = myutils.match_publications_by_keywords(
-            self.publications, keywords)
-
-        return self.publications_without_keywords, self.matched_publications, self.unmatched_publications
-
     def match_authors(self, publications):
         """This function allows to find the authors of a list of publications which match the institute and excludes people_to_exclude specified in the config file.
 
@@ -117,29 +127,8 @@ class InspireInfo(object):
 
         return matched_authors
 
-    def get_clickable_links(self, match_type):
-        """This function generates clickalbe links for an inspire query in the browser
-
-        Args:
-            match_type (str): One of "matched", "unmatched", "no_keywords". Depending on the value, the function returns clickable links for the matched publications, unmatched publications or publications without keywords.
-
-        Raises:
-            ValueError: Raised if input match_type is not one of "matched", "unmatched", "no_keywords".
-
-        Returns:
-            str: Clickable links for the inspire query in the browser.
-        """
-        if match_type not in ["matched", "unmatched", "no_keywords"]:
-            raise ValueError("match_type must be one of ['matched', 'unmatched', 'no_keywords']")
-
-        if match_type == "matched":
-            publications = self.matched_publications
-        elif match_type == "unmatched":
-            publications = self.unmatched_publications
-        else:
-            if hasattr(self, "publications_without_keywords"):
-                publications = self.publications_without_keywords
-        return myutils.get_clickable_links(publications=publications)
+    def get_clickable_links(self):
+        return myutils.get_clickable_links(publications=self.matched_publications)
 
     def print_clickable_links(self, match_type):
         """Executes get_clickable_links and prints the result.
@@ -147,40 +136,61 @@ class InspireInfo(object):
         Args:
             match_type (str): One of "matched", "unmatched", "no_keywords". Depending on the value, the function returns clickable links for the matched publications, unmatched publications or publications without keywords.
         """
-        clickable_links = self.get_clickable_links(match_type)
+        clickable_links = self.get_clickable_links()
         for idx, link in enumerate(clickable_links):
             print("LINK:", idx)
             print(link)
 
-    def read_name_proposal(self, path_to_read=None):
-        """Reads name proposal from a txt-file, from an excel file or from self.name_proposal. Data is stored in self.name_proposal_data.
-
-        Args:
-            path_to_read (str, optional): If provided that is the path which is going to be read. Defaults to None.
-
-        Raises:
-            ValueError: if path_to_read does not end with .xlsm or .txt
-        """
-        if path_to_read is None:
-            print("Reading:", self.name_proposal)
-            with open(self.name_proposal, "r") as f:
-                self.name_proposal_data = [line.strip() for line in f]
-        elif path_to_read.endswith("xlsm"):
-            self.name_proposal_data = myutils.build_name_proposal_from_excel(path_to_read)
-        elif path_to_read.endswith("txt"):
-            with open(path_to_read, "r") as f:
-                self.name_proposal_data = [line.strip() for line in f]
-        else:
-            raise ValueError("path_to_read must end with .xlsm or .txt")
-
-    def match_publications_by_authors(self, bais_to_check_against):
+    def match_publications_by_authors(self):
         if not self.has_data:
             self.get_data()
 
-        self.matched_publications, self.unmatched_publications = myutils.match_publications_by_authors(self.publications,
-                                              bais_to_check_against=bais_to_check_against,
-                                              institute=self.config["institute"],)
-        return self.matched_publications, self.unmatched_publications
+        matched_publications = []
+        for pub in self.publications:
+            if pub.matched:
+                continue
+            matched = False
+            for author_to_check in self.author_bais:
+                if author_to_check in pub.author_bais:
+                    idx = pub.author_bais.index(author_to_check)
+                    candidate_author = pub.author_objects[idx]
+                    if candidate_author.affiliations is not None:
+                        for affiliation in candidate_author.affiliations:
+                            if affiliation == self.config["institute"]:
+                                matched_publications.append(pub)
+                                matched = True
+                                pub.matched = True
+                                break
+                if matched:
+                    break
+        return matched_publications
+
+
+    def match_publications_by_collaborations(self):
+        if not self.has_data:
+            if self.cache_exists:
+                self.get_data(retrieve=False)
+            else:
+                self.get_data(retrieve=True)
+
+        matched_publications = []
+        for pub in self.publications:
+            if pub.matched:
+                continue
+            if pub.collaborations is not None:
+                for collaboration in self.collaborations:
+                    if collaboration in pub.collaborations and pub.earliest_date_year >= self.earliest_date_collaboration_check:
+                        if len(pub.authors) > 0:
+                            for auth in pub.author_objects:
+                                if auth.bai in self.author_bais:
+                                    matched_publications.append(pub)
+                                    pub.matched = True
+                                    break
+                        else:
+                            pub.matched = True
+                        matched_publications.append(pub)
+                        break
+        return matched_publications
 
     def download_publications(self, publications, link_type=None, target_dir=None):
         """This function downloads the `publications` to the `target_dir`. If `link_type` is not specified, the link_type from the config file is used. If `target_dir` is not specified, the `link_type` is used. The tarball is named `publications_{link_type}_{date}.tar.gz`.
@@ -231,3 +241,62 @@ class InspireInfo(object):
             publications=publications,
             link_type=link_type,
             target_dir=target_dir)
+
+    def search_authors_and_download(self, authors_output_dir="authors", author=None):
+        if author is None:
+            authors = self.authors
+        else:
+            authors = [author]
+        if authors is None:
+            raise ValueError("Please set the authors in your config or set the authors of your InspireInfo.")
+
+        print("Saving authors to directory: {}".format(authors_output_dir))
+        if not os.path.exists(authors_output_dir):
+            os.makedirs(authors_output_dir)
+
+        print("Searching for authors")
+        for author in tqdm.tqdm(authors):
+            query = myutils.build_person_query(author, size=5)
+            data = myutils.read_from_inspire(query, silent=True)
+            path_to_save = os.path.join(authors_output_dir, self.author_file_template.format(author=author))
+            with open(path_to_save, "w") as f:
+                json.dump(data, f)
+
+    def get_papers(self, lower_date, upper_date, download, target_dir):
+        print("Overwriting lower_date and upper_date in config with: {} {}".format(
+            lower_date, upper_date))
+
+        self.config["lower_date"] = lower_date
+        self.config["upper_date"] = upper_date
+
+        if self.cache_exists:
+            self.get_data(retrieve=False)
+        else:
+            raise ValueError("Please create a cache-file first.")
+
+        self.match_publications_by_authors()
+        self.match_publications_by_collaborations()
+        self.print_clickable_links(match_type="matched")
+
+        missing_publications = self.check_missing_publications_on_disk(
+            self.matched_publications, link_type=download, target_dir=target_dir)
+
+        if download != "None":
+            self.download_publications(
+                publications=missing_publications,
+                link_type=download,
+                target_dir=target_dir
+                )
+
+    def download_missing_authors(self):
+        for author in self.authors:
+            author_file = os.path.join(self.authors_output_dir, self.author_file_template.format(author=author))
+            if not os.path.exists(author_file):
+                print("Author file {} does not exist. Downloading it.".format(author_file))
+                self.search_authors_and_download(authors_output_dir=self.authors_output_dir, author=author)
+
+    @property
+    def conversion_style_to_html(self):
+        config = self.config_path
+        abs_config_path = os.path.abspath(self.config_path)
+        return os.path.join(os.path.dirname(abs_config_path), self.config["conversion_style_to_html"])

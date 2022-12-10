@@ -70,12 +70,17 @@ def get_papers(config, lower_date, upper_date, authors_output_dir, download, tar
     inspire_getter.config["upper_date"] = upper_date
     inspire_getter.get_data()
 
-    filelist_query = os.path.join(authors_output_dir, "*.txt")
-    filelist = glob.glob(filelist_query)
+    #  filelist_query = os.path.join(authors_output_dir, "*.txt")
+    filelist  =  []
+    for author in inspire_getter.authors:
+        author_file = os.path.join(authors_output_dir, f"author_{author}.txt")
+        filelist.append(author_file)
     print("Found {} files in {}".format(len(filelist), authors_output_dir))
 
     bais_to_check = inspire_info.myutils.get_inspire_bais_from_filelist(filelist)
     inspire_getter.match_publications_by_authors(bais_to_check)
+    collaborations_to_check = ["XENON", "GERDA"]
+    inspire_getter.match_publications_by_collaborations(collaborations_to_check)
     inspire_getter.print_clickable_links(match_type="matched")
 
     missing_publications = inspire_getter.check_missing_publications_on_disk(

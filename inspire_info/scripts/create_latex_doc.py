@@ -6,7 +6,6 @@ __license__ = 'MIT'
 __email__ = 'tim.wolf@mpi-hd.mpg.de'
 
 import argparse
-import os
 from inspire_info import LatexCreator
 
 def parse_args():
@@ -36,10 +35,10 @@ template = r"""\documentclass[11pt]{article}
 \author{Tim Wolf}
 \date{}
 
-%\usepackage[resetlabels,labeled]{multibib}
+\usepackage[resetlabels,labeled]{multibib}
 % \usepackage{bibtex}
-% \newcites{Math}{Math Readings}
-% \newcites{Phys}{Physics Readings}
+\newcites{Math}{Math Readings}
+\newcites{Phys}{Physics Readings}
 
 
 \begin{document}
@@ -48,7 +47,7 @@ template = r"""\documentclass[11pt]{article}
 
 __NOCITES__
 
-\bibliographystyle{abbrv}
+\bibliographystyle{unsrt}
 \bibliography{references}
 
 % \bibliographystyleMath{unsrt}
@@ -60,8 +59,8 @@ __NOCITES__
 \end{document}
 """
 
-def create_latex_doc(template, output_dir, source_dir, filename):
-    document_maker = LatexCreator(template=template,
+def create_latex_doc(latex_template, output_dir, source_dir, filename):
+    document_maker = LatexCreator(template=latex_template,
                                   outdir=output_dir,
                                   source_folder=source_dir,
                                   filename=filename)
