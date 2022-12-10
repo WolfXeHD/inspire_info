@@ -23,7 +23,7 @@ def parse_args():
 def main():
     parsed_args = parse_args()
     inspire_getter = InspireInfo(config_path=parsed_args["config"])
-    inspire_getter.get_data(retrieve=True, silent=True)
+    inspire_getter.get_data(retrieve=True)
     inspire_getter.write_data()
 
 if __name__ == "__main__":
