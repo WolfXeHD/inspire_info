@@ -50,7 +50,7 @@ def main():
     parsed_args = parse_args()
     inspire_getter = InspireInfo(parsed_args["config"])
 
-    pandoc_command = inspire_getter.config.get(["pandoc_command"], "pandoc")
+    pandoc_command = inspire_getter.config.get("pandoc_command", "pandoc")
 
     if not inspire_getter.cache_exists or parsed_args["retrieve_data"]:
         inspire_getter.get_data(retrieve=True)
