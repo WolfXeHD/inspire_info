@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 __author__ = 'Tim Michael Heinz Wolf'
-__version__ = '0.1.10'
+__version__ = '0.1.11'
 __license__ = 'MIT'
 __email__ = 'tim.wolf@mpi-hd.mpg.de'
 
