@@ -6,11 +6,9 @@ __license__ = 'MIT'
 __email__ = 'tim.wolf@mpi-hd.mpg.de'
 
 import argparse
-import os
 from datetime import datetime
 from inspire_info.InspireInfo import InspireInfo
 from inspire_info.LatexCreator import LatexCreator
-from inspire_info.myutils import write_data
 from inspire_info.scripts.create_latex_doc import template as latex_template
 
 def parse_args():
@@ -50,12 +48,11 @@ def parse_args():
 
 def main():
     parsed_args = parse_args()
-    if parsed_args["year"] is not None and (parsed_args["lower_date"] is not None or parsed_args["upper_date"] is not None):
-        raise ValueError("You can either specify a year or a lower and upper date, but not both.")
-
     inspire_getter = InspireInfo(parsed_args["config"])
 
-    if parsed_args["retrieve_data"]:
+    pandoc_command = inspire_getter.config.get(["pandoc_command"], "pandoc")
+
+    if not inspire_getter.cache_exists or parsed_args["retrieve_data"]:
         inspire_getter.get_data(retrieve=True)
         inspire_getter.write_data()
     print(f"Data retrieved: {inspire_getter.has_data}")
@@ -121,6 +118,7 @@ def main():
                                       bibtex_list=inspire_getter.downloaded_bibtex_files,
                                       filename=filename,
                                       conversion_style_to_html=inspire_getter.conversion_style_to_html,
+                                      pandoc_command=pandoc_command
                                       )
         document_maker.make_bibliography()
         document_maker.create_latex_doc()

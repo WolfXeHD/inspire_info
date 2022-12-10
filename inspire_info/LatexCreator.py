@@ -13,7 +13,9 @@ class LatexCreator:
                  filename,
                  bibtex_list=None,
                  outdir=None,
-                 conversion_style_to_html=None):
+                 conversion_style_to_html=None,
+                 pandoc_command="pandoc"
+                 ):
         self.template = template
         if outdir is None:
             self.outdir = os.path.join(
@@ -26,6 +28,7 @@ class LatexCreator:
         self.keys = []
         self.filename = filename
         self.conversion_style_to_html = conversion_style_to_html
+        self.pandoc_command = pandoc_command
 
         myutils.ensure_dirs(dirs=[self.outdir])
 
@@ -89,8 +92,9 @@ class LatexCreator:
         os.chdir(self.outdir)
         copy_cmd = f"cp {self.convert_latex_to_html} ."
         os.system(copy_cmd)
-        cmd = "pandoc --standalone --output {output} --citeproc --mathjax references.bib --from bibtex --csl {conversion_style_to_html}"
+        cmd = "{pandoc_command} --standalone --output {output} --citeproc --mathjax references.bib --from bibtex --csl {conversion_style_to_html}"
         cmd = cmd.format(
+            pandoc_command=self.pandoc_command,
             output=self.filename.replace(".tex", ".html"),
             conversion_style_to_html=self.conversion_style_to_html)
         os.system(cmd)
