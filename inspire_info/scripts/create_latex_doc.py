@@ -35,7 +35,7 @@ template = r"""\documentclass[11pt]{article}
 \author{Tim Wolf}
 \date{}
 
-\usepackage[resetlabels,labeled]{multibib}
+%\ usepackage[resetlabels,labeled]{multibib}
 % \usepackage{bibtex}
 \newcites{Math}{Math Readings}
 \newcites{Phys}{Physics Readings}

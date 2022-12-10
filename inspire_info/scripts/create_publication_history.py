@@ -6,6 +6,7 @@ __license__ = 'MIT'
 __email__ = 'tim.wolf@mpi-hd.mpg.de'
 
 import argparse
+import os
 from datetime import datetime
 from inspire_info.InspireInfo import InspireInfo
 from inspire_info.LatexCreator import LatexCreator
@@ -18,10 +19,6 @@ def parse_args():
                         type=str,
                         help="Config file to read.",
                         required=True)
-    parser.add_argument('--authors_output_dir',
-                        type=str,
-                        help="Directory to save the output.",
-                        default="authors")
     parser.add_argument('--update_authors',
                         action="store_true",
                         help="Update authors in the authors_output_dir.")
@@ -49,7 +46,6 @@ def parse_args():
 def main():
     parsed_args = parse_args()
     inspire_getter = InspireInfo(parsed_args["config"])
-
     pandoc_command = inspire_getter.config.get("pandoc_command", "pandoc")
 
     if not inspire_getter.cache_exists or parsed_args["retrieve_data"]:
@@ -59,10 +55,7 @@ def main():
 
 
     if parsed_args["update_authors"]:
-        dict_to_parse = {
-            "authors_output_dir": parsed_args["authors_output_dir"],
-        }
-        inspire_getter.search_authors_and_download(**dict_to_parse)
+        inspire_getter.search_authors_and_download()
     else:
         inspire_getter.download_missing_authors()
 
@@ -103,8 +96,9 @@ def main():
         lower_date = '{lower_year}-01-01'.format(lower_year=lower_year)
         upper_date = '{upper_year}-01-01'.format(upper_year=upper_year)
 
-
-        target_dir = "publications_{lower_year}_{upper_year}".format(lower_year=lower_year, upper_year=upper_year)
+        abs_config_path = os.path.abspath(parsed_args["config"])
+        abs_dir_config_path = os.path.dirname(abs_config_path)
+        target_dir = os.path.join(abs_dir_config_path, "publications_{lower_year}_{upper_year}".format(lower_year=lower_year, upper_year=upper_year)
         dict_to_parse = {"lower_date": lower_date,
                         "upper_date": upper_date,
                         "download": "bibtex",
