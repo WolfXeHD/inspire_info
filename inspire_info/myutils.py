@@ -123,7 +123,11 @@ def build_query_template(lower_date, upper_date, add_institute=True, search_type
 
     time_query = build_time_query(lower_date=lower_date, upper_date=upper_date)
     if time_query != "":
-        institute_and_time_query = query + " and " + time_query
+        if query.endswith("&q=()"):
+            institute_and_time_query = query[:-1] + time_query
+        else:
+            institute_and_time_query = query + " and " + time_query
+        institute_and_time_query += ")"
     else:
         institute_and_time_query = query
 
