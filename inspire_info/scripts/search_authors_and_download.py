@@ -5,10 +5,7 @@ __version__ = '0.1.11'
 __license__ = 'MIT'
 __email__ = 'tim.wolf@mpi-hd.mpg.de'
 
-import inspire_info
-import json
-import os
-import tqdm
+from inspire_info.InspireInfo import InspireInfo
 import argparse
 
 
@@ -18,19 +15,16 @@ def parse_args():
     parser.add_argument('--config',
                         type=str,
                         help="Config file to read.",
-                        default=None
+                        required=True
                         )
-    parser.add_argument('--authors_output_dir',
-                        type=str,
-                        help="Directory to save the output.",
-                        default="authors")
 
     return dict(vars(parser.parse_args()))
 
 
 def main():
     parsed_args = parse_args()
-    search_authors_and_download(**parsed_args)
+    inspire_getter = InspireInfo(parsed_args["config"])
+    inspire_getter.search_authors_and_download()
 
 if __name__ == "__main__":
     main()
