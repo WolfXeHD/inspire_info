@@ -98,7 +98,7 @@ def main():
 
         abs_config_path = os.path.abspath(parsed_args["config"])
         abs_dir_config_path = os.path.dirname(abs_config_path)
-        target_dir = os.path.join(abs_dir_config_path, "publications_{lower_year}_{upper_year}".format(lower_year=lower_year, upper_year=upper_year)
+        target_dir = os.path.join(abs_dir_config_path, "..", "publications_{lower_year}_{upper_year}".format(lower_year=lower_year, upper_year=upper_year))
         dict_to_parse = {"lower_date": lower_date,
                         "upper_date": upper_date,
                         "download": "bibtex",

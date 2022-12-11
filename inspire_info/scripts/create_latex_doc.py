@@ -32,13 +32,13 @@ def parse_args():
 template = r"""\documentclass[11pt]{article}
 
 \title{Bibliography}
-\author{Tim Wolf}
+\author{Your friendly inspire_info}
 \date{}
 
 %\ usepackage[resetlabels,labeled]{multibib}
 % \usepackage{bibtex}
-\newcites{Math}{Math Readings}
-\newcites{Phys}{Physics Readings}
+% \newcites{Math}{Math Readings}
+% \newcites{Phys}{Physics Readings}
 
 
 \begin{document}
