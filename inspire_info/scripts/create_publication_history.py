@@ -117,6 +117,7 @@ def main():
         document_maker.make_bibliography()
         document_maker.create_latex_doc()
         document_maker.convert_latex_to_html()
+        document_maker.write_html_body_to_file()
 
 if __name__ == "__main__":
     main()

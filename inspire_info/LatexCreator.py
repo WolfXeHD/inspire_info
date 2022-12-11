@@ -6,6 +6,8 @@ __email__ = 'tim.wolf@mpi-hd.mpg.de'
 import os
 import glob
 import logging as log
+from bs4 import BeautifulSoup
+
 from inspire_info import myutils
 
 
@@ -104,3 +106,21 @@ class LatexCreator:
             conversion_style_to_html=self.conversion_style_to_html)
         os.system(cmd)
         os.chdir(cwd)
+
+    def extract_body_of_html(self):
+        html_file = os.path.join(self.outdir, self.filename.replace(".tex", ".html"))
+        if not os.path.exists(html_file):
+            raise FileNotFoundError(f"File {html_file} does not exist.")
+
+        with open(html_file, "r") as f:
+            html = f.read()
+        soup = BeautifulSoup(html, features="html.parser")
+
+        body = soup.find("body")
+        return body
+
+    def write_html_body_to_file(self):
+        body = self.extract_body_of_html()
+        html_file = os.path.join(self.outdir, "body_" + self.filename.replace(".tex", ".html"))
+        with open(html_file, "w") as f:
+            f.write(str(body))
