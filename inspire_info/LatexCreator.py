@@ -104,3 +104,7 @@ class LatexCreator:
             conversion_style_to_html=self.conversion_style_to_html)
         os.system(cmd)
         os.chdir(cwd)
+
+    def truncate_html(self):
+        pass
+
