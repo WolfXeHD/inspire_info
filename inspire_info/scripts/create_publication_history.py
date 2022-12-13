@@ -105,8 +105,8 @@ def main():
                         "target_dir": target_dir}
         inspire_getter.get_papers(**dict_to_parse)
 
-        filename = "publications_{lower_year}_{upper_year}.tex".format(lower_year=lower_year,
-                                                                    upper_year=upper_year)
+        filename = "publications_{lower_year}_{upper_year}.tex".format(
+            lower_year=lower_year, upper_year=upper_year)
         document_maker = LatexCreator(template=latex_template,
                                       source_folder=target_dir,
                                       bibtex_list=inspire_getter.downloaded_bibtex_files,

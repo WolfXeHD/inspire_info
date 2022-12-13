@@ -1,18 +1,18 @@
 import datetime
+import json
+import math
+import os
+import pickle
+import re
 import time
+from itertools import compress
 from urllib.parse import quote
 
+import numpy as np
+import pandas as pd
 import requests
-import math
 import tqdm
 import yaml
-import pickle
-import pandas as pd
-import numpy as np
-import os
-import re
-import json
-from itertools import compress
 
 
 def read_config(file_to_read):
