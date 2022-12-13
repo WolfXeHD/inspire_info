@@ -80,7 +80,6 @@ class InspireInfo(object):
                 files.append(pub.downloaded_bibtex_file)
         return files
 
-
     @property
     def author_bais(self):
         filelist  =  []
@@ -117,30 +116,10 @@ class InspireInfo(object):
         """
         myutils.write_data(data=self.data, filename=self.cache_file)
 
-    def match_authors(self, publications):
-        """This function allows to find the authors of a list of publications which match the institute and excludes people_to_exclude specified in the config file.
-
-        Args:
-            publications (Publication): List of publications among which the authors should be found.
-
-        Returns:
-            list: List of authors' full name which match the institute and are not in people_to_exclude.
-        """
-        matched_authors = myutils.get_matched_authors(publications=publications,
-                                                 institute=self.config["institute"],
-                                                 people_to_exclude=self.config["people_to_exclude"])
-
-        return matched_authors
-
     def get_clickable_links(self):
         return myutils.get_clickable_links(publications=self.matched_publications)
 
-    def print_clickable_links(self, match_type):
-        """Executes get_clickable_links and prints the result.
-
-        Args:
-            match_type (str): One of "matched", "unmatched", "no_keywords". Depending on the value, the function returns clickable links for the matched publications, unmatched publications or publications without keywords.
-        """
+    def print_clickable_links(self):
         clickable_links = self.get_clickable_links()
         for idx, link in enumerate(clickable_links):
             print("LINK:", idx)
@@ -169,7 +148,6 @@ class InspireInfo(object):
                 if matched:
                     break
         return matched_publications
-
 
     def match_publications_by_collaborations(self):
         if not self.has_data:

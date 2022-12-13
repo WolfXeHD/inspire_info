@@ -134,23 +134,6 @@ def build_query_template(lower_date, upper_date, add_institute=True, search_type
     return institute_and_time_query
 
 
-def get_matched_authors(publications, institute, people_to_exclude):
-    all_authors = []
-    for pub in publications:
-        for auth in pub.author_objects:
-            if auth.affiliations is not None and institute in auth.affiliations:
-                for name in people_to_exclude:
-                    if name in auth.full_name:
-                        print("excluding: " + auth.full_name,
-                              "with publication", pub.title)
-                        break
-                else:
-                    all_authors.append(auth)
-
-    all_authors_named = list(set([auth.full_name for auth in all_authors]))
-    return all_authors_named
-
-
 def get_data(global_query, retrieve, institute_and_time_query, config):
     if retrieve:
         # retrieving data
@@ -246,24 +229,6 @@ def convert_to_pandas(data):
     earliest_date = df.apply(lambda row: get_earliest_date(row=row), axis=1)
     df["earliest_date"] = pd.to_datetime(earliest_date)
     return df
-
-def match_publications_by_keywords(publications, keywords):
-    publications_without_keywords = []
-    matched_publications = []
-    unmatched_publications = []
-
-    for pub in tqdm.tqdm(publications):
-        if pub.keywords is not None:
-            for keyword in keywords:
-                if keyword in pub.keywords:
-                    matched_publications.append(pub)
-                    break
-            else:
-                unmatched_publications.append(pub)
-        else:
-            publications_without_keywords.append(pub)
-            continue
-    return publications_without_keywords, matched_publications, unmatched_publications
 
 def get_clickable_links(publications):
     clickable_links = []

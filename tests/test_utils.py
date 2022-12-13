@@ -49,3 +49,15 @@ def test_build_person_query(person, size, search_type, expected):
         print("query:", query)
         print("expected:", expected)
         assert query == expected
+
+@pytest.mark.parametrize("id_list,size,expected", [
+    ([12345, 23456], "500", "https://inspirehep.net/api/literature?fields=titles,authors,id&sort=mostrecent&size=500&page=1&q=recid%3A12345%20or%20recid%3A23456"),
+])
+def test_get_publication_by_id(id_list, size, expected):
+    query = myutils.get_publication_by_id(id_list, size)
+    print("query:", query)
+    print("expected:", expected)
+    assert query == expected
+
+# def test_get_data():
+#     assert 1 == 2
