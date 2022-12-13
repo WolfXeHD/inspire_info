@@ -1,3 +1,4 @@
+beautifulsoup4>=4.11.1
 numpy>=1.19.4
 pandas>=1.5.2
 pandas_stubs>=1.2.0.49
