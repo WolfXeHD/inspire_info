@@ -25,3 +25,27 @@ def test_build_query_template(lower_date, upper_date, add_institute, add_collabo
     print("expected:", expected)
     assert query == expected
 
+@pytest.mark.parametrize("lower_date,upper_date,expected", [
+    ("2006-01-01", "2020-01-01", "date>2006-01-01%20and%20date<2020-01-01"),
+    ("2006-01-01", None, "date>2006-01-01"),
+])
+def test_build_time_query(lower_date, upper_date, expected):
+    query = myutils.build_time_query(lower_date, upper_date)
+    print("query:", query)
+    print("expected:", expected)
+    assert query == expected
+
+
+@pytest.mark.parametrize("person,size,search_type,expected", [
+    ("TestAuthor.1", "25", "mytypo", "raises ValueError"),
+    ("TestAuthor.1", "25", "author", "https://inspirehep.net/api/literature?sort=mostrecent&size={size}&page={page}&q=(author:TestAuthor.1)"),
+])
+def test_build_person_query(person, size, search_type, expected):
+    if search_type not in ["authors", "literature"]:
+        pytest.raises(ValueError)
+
+    else:
+        query = myutils.build_person_query(person=person, size=size, search_type=search_type)
+        print("query:", query)
+        print("expected:", expected)
+        assert query == expected

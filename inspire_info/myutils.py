@@ -61,8 +61,8 @@ def get_publication_by_id(id_list, size=500):
     id_template = 'recid%3A{id} or '
 
     id_query = ""
-    for id in id_list:
-        id_query += id_template.format(id=id)
+    for pub_id in id_list:
+        id_query += id_template.format(id=pub_id)
     id_query = id_query[:-4]
     id_query = id_query.replace(" ", "%20")
     return other_query.format(page='1', size=size) + id_query
@@ -73,27 +73,12 @@ def build_time_query(lower_date=None, upper_date=None):
     time_query_up = 'date<{upper_date}'
     if upper_date is not None and lower_date is not None:
         return time_query_low.format(
-            lower_date=lower_date) + " and " + time_query_up.format(
+            lower_date=lower_date) + "%20and%20" + time_query_up.format(
                 upper_date=upper_date)
     elif lower_date is not None:
         return time_query_low.format(lower_date=lower_date)
     else:
         return ""
-
-
-def build_people_query(file_to_read):
-    # This needs to be replaced with the csv from Anja
-    with open(file_to_read, "r") as f:
-        people_to_match = [line.strip() for line in f]
-
-    author_query = '(author%3A{name})'
-    people_query = ""
-    for author in people_to_match:
-        people_query += author_query.format(name=author) + " or "
-    people_query = people_query[:-4]
-    people_query = people_query.replace(" ", "%20")
-    return people_query, people_to_match
-
 
 def build_person_query(person, size=25, search_type="authors"):
     if search_type not in ["authors", "literature"]:
@@ -240,8 +225,7 @@ def get_tarball_of_publications(publications, link_type, target_dir, tarball_nam
         cmd = "wget -P {target_dir} {link}".format(target_dir=target_dir,
                                                    link=link)
         os.system(cmd)
-    else:
-        print("Downloaded {} publication files".format(len(ids)))
+    print("Downloaded {} publication files".format(len(ids)))
 
     # Create tarball of all files
     cmd = "tar -czvf {tarball_name} -C {target_dir} .".format(
