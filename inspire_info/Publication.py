@@ -7,6 +7,7 @@ from inspire_info.Author import Author
 import datetime
 import os
 
+
 class Publication(object):
 
     def __init__(self, publication):
@@ -31,7 +32,8 @@ class Publication(object):
         datetime_object = datetime.datetime.strptime(self.earliest_date, '%Y')
         self.earliest_date_year = datetime_object.year
         if "collaborations" in self.meta:
-            self.collaborations = [item["value"] for item in self.meta["collaborations"]]
+            self.collaborations = [item["value"]
+                                   for item in self.meta["collaborations"]]
         else:
             self.collaborations = []
         self.matched = False
@@ -52,4 +54,3 @@ class Publication(object):
     @property
     def downloaded_bibtex_file(self):
         return self.downloaded_file(link_type="bibtex")
-

@@ -26,5 +26,6 @@ def main():
     inspire_getter = InspireInfo(parsed_args["config"])
     inspire_getter.search_authors_and_download()
 
+
 if __name__ == "__main__":
     main()

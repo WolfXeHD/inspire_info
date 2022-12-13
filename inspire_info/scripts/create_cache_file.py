@@ -26,5 +26,6 @@ def main():
     inspire_getter.get_data(retrieve=True)
     inspire_getter.write_data()
 
+
 if __name__ == "__main__":
     main()

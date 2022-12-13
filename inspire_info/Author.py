@@ -3,6 +3,7 @@ __version__ = '0.1.11'
 __license__ = 'MIT'
 __email__ = 'tim.wolf@mpi-hd.mpg.de'
 
+
 class Author(object):
 
     def __init__(self, author):
@@ -33,7 +34,6 @@ class Author(object):
                 if id["schema"] == "INSPIRE BAI":
                     return id["value"]
         return None
-
 
     def __repr__(self):
         return "Author(" + self.full_name + ")"

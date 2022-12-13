@@ -8,6 +8,7 @@ __email__ = 'tim.wolf@mpi-hd.mpg.de'
 import argparse
 from inspire_info import LatexCreator
 
+
 def parse_args():
     parser = argparse.ArgumentParser(
         description='Command line tool to search for authors in inspire')
@@ -28,6 +29,7 @@ def parse_args():
                         )
 
     return dict(vars(parser.parse_args()))
+
 
 template = r"""\documentclass[11pt]{article}
 
@@ -59,6 +61,7 @@ __NOCITES__
 \end{document}
 """
 
+
 def create_latex_doc(latex_template, output_dir, source_dir, filename):
     document_maker = LatexCreator(template=latex_template,
                                   outdir=output_dir,
@@ -67,6 +70,7 @@ def create_latex_doc(latex_template, output_dir, source_dir, filename):
     document_maker.make_bibliography()
 
     document_maker.create_latex_doc()
+
 
 def main():
     parsed_args = parse_args()

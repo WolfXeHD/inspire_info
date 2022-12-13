@@ -8,6 +8,7 @@ __email__ = 'tim.wolf@mpi-hd.mpg.de'
 import glob
 import argparse
 
+
 def parse_args():
     parser = argparse.ArgumentParser(
         description='Merge bibtex files into one file')
@@ -24,6 +25,7 @@ def parse_args():
 
     return dict(vars(parser.parse_args()))
 
+
 def main():
     parsed_args = parse_args()
     files_query = parsed_args["source_dir"] + "/*"
@@ -38,4 +40,5 @@ def main():
 
     with open(parsed_args["output_file"], "w") as f:
         f.write(total_data)
-    print("{} files merged into {}".format(len(files), parsed_args["output_file"]))
+    print("{} files merged into {}".format(
+        len(files), parsed_args["output_file"]))

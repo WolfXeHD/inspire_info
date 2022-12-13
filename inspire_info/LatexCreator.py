@@ -12,7 +12,8 @@ from inspire_info import myutils
 
 
 class LatexCreator:
-    """This class creates a latex document with a bibliography from a template and a folder with bibtex files.
+    """This class creates a latex document with a bibliography from a template and a folder with
+    bibtex files.
     """
     def __init__(self,
                  template,
@@ -99,7 +100,8 @@ class LatexCreator:
         os.chdir(self.outdir)
         copy_cmd = f"cp {self.convert_latex_to_html} ."
         os.system(copy_cmd)
-        cmd = "{pandoc_command} --standalone --output {output} --citeproc --mathjax references.bib --from bibtex --csl {conversion_style_to_html}"
+        cmd = "{pandoc_command} --standalone --output {output} --citeproc --mathjax references.bib"
+        cmd += "--from bibtex --csl {conversion_style_to_html}"
         cmd = cmd.format(
             pandoc_command=self.pandoc_command,
             output=self.filename.replace(".tex", ".html"),

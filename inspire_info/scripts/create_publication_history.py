@@ -12,6 +12,7 @@ from inspire_info.InspireInfo import InspireInfo
 from inspire_info.LatexCreator import LatexCreator
 from inspire_info.scripts.create_latex_doc import template as latex_template
 
+
 def parse_args():
     parser = argparse.ArgumentParser(
         description='Scraping of inspire for institute publications')
@@ -40,8 +41,8 @@ def parse_args():
         help="String to execute further specifications on the database",
         default=None)
 
-
     return dict(vars(parser.parse_args()))
+
 
 def main():
     parsed_args = parse_args()
@@ -52,7 +53,6 @@ def main():
         inspire_getter.get_data(retrieve=True)
         inspire_getter.write_data()
     print(f"Data retrieved: {inspire_getter.has_data}")
-
 
     if parsed_args["update_authors"]:
         inspire_getter.search_authors_and_download()
@@ -85,8 +85,9 @@ def main():
         upper_date = datetime.now()
     print(f"Lower date: {lower_date}, upper date: {upper_date}")
 
-    #make list of years between two dates
-    years = [lower_date.year + i for i in range(upper_date.year - lower_date.year + 2)]
+    # make list of years between two dates
+    years = [lower_date.year +
+             i for i in range(upper_date.year - lower_date.year + 2)]
     if parsed_args["lower_date"] is not None or parsed_args["upper_date"] is not None:
         years = [lower_date.year, upper_date.year]
     if parsed_args["year"] is not None:
@@ -98,26 +99,31 @@ def main():
 
         abs_config_path = os.path.abspath(parsed_args["config"])
         abs_dir_config_path = os.path.dirname(abs_config_path)
-        target_dir = os.path.join(abs_dir_config_path, "..", "publications_{lower_year}_{upper_year}".format(lower_year=lower_year, upper_year=upper_year))
+        target_dir = os.path.join(abs_dir_config_path,
+                                  "..",
+                                  "publications_{lower_year}_{upper_year}".format(
+                                      lower_year=lower_year, upper_year=upper_year))
         dict_to_parse = {"lower_date": lower_date,
-                        "upper_date": upper_date,
-                        "download": "bibtex",
-                        "target_dir": target_dir}
+                         "upper_date": upper_date,
+                         "download": "bibtex",
+                         "target_dir": target_dir}
         inspire_getter.get_papers(**dict_to_parse)
 
         filename = "publications_{lower_year}_{upper_year}.tex".format(
             lower_year=lower_year, upper_year=upper_year)
-        document_maker = LatexCreator(template=latex_template,
-                                      source_folder=target_dir,
-                                      bibtex_list=inspire_getter.downloaded_bibtex_files,
-                                      filename=filename,
-                                      conversion_style_to_html=inspire_getter.conversion_style_to_html,
-                                      pandoc_command=pandoc_command
-                                      )
+        document_maker = LatexCreator(
+            template=latex_template,
+            source_folder=target_dir,
+            bibtex_list=inspire_getter.downloaded_bibtex_files,
+            filename=filename,
+            conversion_style_to_html=inspire_getter.conversion_style_to_html,
+            pandoc_command=pandoc_command
+        )
         document_maker.make_bibliography()
         document_maker.create_latex_doc()
         document_maker.convert_latex_to_html()
         document_maker.write_html_body_to_file()
+
 
 if __name__ == "__main__":
     main()

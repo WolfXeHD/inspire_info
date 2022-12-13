@@ -20,6 +20,7 @@ def read_config(file_to_read):
         config = yaml.load(f, Loader=yaml.SafeLoader)
     return config
 
+
 def read_authors(authors_file):
     with open(authors_file, "r", encoding='unicode-escape') as f:
         authors = [line.strip() for line in f]
@@ -57,7 +58,8 @@ def get_publication_query(publications, clickable):
 
 
 def get_publication_by_id(id_list, size=500):
-    other_query = 'https://inspirehep.net/api/literature?fields=titles,authors,id&sort=mostrecent&size={size}&page={page}&q='
+    other_query = 'https://inspirehep.net/api/literature?fields=titles,authors,id'
+    + '&sort=mostrecent&size={size}&page={page}&q='
     id_template = 'recid%3A{id} or '
 
     id_query = ""
@@ -80,15 +82,25 @@ def build_time_query(lower_date=None, upper_date=None):
     else:
         return ""
 
+
 def build_person_query(person, size=25, search_type="authors"):
     if search_type not in ["authors", "literature"]:
         raise ValueError("search_type must be either authors or literature")
 
-    query_template = build_query_template(lower_date=None, upper_date=None, add_institute=False, search_type=search_type) + "&q={person}".format(person=quote(person))
+    query_template = build_query_template(lower_date=None,
+                                          upper_date=None,
+                                          add_institute=False,
+                                          search_type=search_type)
+    + "&q={person}".format(person=quote(person))
     query_template = query_template.format(size=size, page=1)
     return query_template
 
-def build_query_template(lower_date, upper_date, add_institute=True, search_type="literature", add_collaborations=None):
+
+def build_query_template(lower_date,
+                         upper_date,
+                         add_institute=True,
+                         search_type="literature",
+                         add_collaborations=None):
     # building query command
     query = 'https://inspirehep.net/api/{search_type}?sort=mostrecent&size={size}&page={page}'
     query += '&q=('
@@ -97,7 +109,8 @@ def build_query_template(lower_date, upper_date, add_institute=True, search_type
         query += "aff:{institute}"
 
     if add_collaborations is not None:
-        collaborations_query = " or ".join(["collaboration:" + collaboration for collaboration in add_collaborations])
+        collaborations_query = " or ".join(
+            ["collaboration:" + collaboration for collaboration in add_collaborations])
         collaborations_query = "(" + collaborations_query + ")"
         if not add_institute:
             query += collaborations_query + ")"
@@ -117,7 +130,8 @@ def build_query_template(lower_date, upper_date, add_institute=True, search_type
         institute_and_time_query = query
 
     if institute_and_time_query.endswith("&q=()"):
-        institute_and_time_query = institute_and_time_query.replace("&q=()", "")
+        institute_and_time_query = institute_and_time_query.replace(
+            "&q=()", "")
 
     matches = re.findall(r'\{(.*?)\}', institute_and_time_query)
     replace_dict = {}
@@ -147,7 +161,8 @@ def get_data(global_query, retrieve, institute_and_time_query, config):
                     page=str(i + 1),
                     size=str(config["size"]),
                     institute=quote(config["institute"]))
-                temp_data = read_from_inspire(formatted_query=this_query, silent=True)
+                temp_data = read_from_inspire(
+                    formatted_query=this_query, silent=True)
                 data["hits"]["hits"] += temp_data["hits"]["hits"]
         data, df = apply_cleaning_to_data(data=data, config=config)
     else:
@@ -220,7 +235,7 @@ def convert_to_pandas(data):
     df = pd.DataFrame(data["hits"]["hits"])
     updated_date = df.apply(lambda row: datetime.datetime.strptime(
         row["updated"], "%Y-%m-%dT%H:%M:%S.%f+00:00"),
-                            axis=1)
+        axis=1)
     created_date = df.apply(
         lambda row: datetime.datetime.strptime(row["created"][:4], "%Y"),
         axis=1)
@@ -229,6 +244,7 @@ def convert_to_pandas(data):
     earliest_date = df.apply(lambda row: get_earliest_date(row=row), axis=1)
     df["earliest_date"] = pd.to_datetime(earliest_date)
     return df
+
 
 def get_clickable_links(publications):
     clickable_links = []
@@ -241,14 +257,17 @@ def get_clickable_links(publications):
         clickable_links.append(clickalbe_link)
     return clickable_links
 
+
 def check_missing_publications_on_disk(publications, target_dir, link_type):
     missing_publications = []
     for pub in publications:
-        path_to_check = os.path.join(target_dir, pub.downloaded_file(link_type))
+        path_to_check = os.path.join(
+            target_dir, pub.downloaded_file(link_type))
         print(path_to_check)
         if not os.path.exists(path_to_check):
             missing_publications.append(pub)
     return missing_publications
+
 
 def build_name_proposal_from_excel(path_to_excel):
     df = pd.read_excel(path_to_excel)
@@ -259,6 +278,7 @@ def build_name_proposal_from_excel(path_to_excel):
         for split in splitted_data:
             name_proposal_data.append(split)
     return name_proposal_data
+
 
 def get_inspire_bai(file):
     with open(file, "r") as f:
@@ -279,11 +299,13 @@ def get_inspire_bai(file):
             break
     return l_bais
 
+
 def get_inspire_bais_from_filelist(filelist):
     l_bais = []
     for file in filelist:
         l_bais += get_inspire_bai(file)
     return l_bais
+
 
 def ensure_dirs(dirs):
     for dir in dirs:

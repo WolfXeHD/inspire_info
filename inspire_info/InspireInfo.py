@@ -23,7 +23,8 @@ class InspireInfo(object):
         self.publications = []
 
         self.authors = self.config["authors"]
-        self.authors_output_dir = self.config.get("authors_output_dir", "authors")
+        self.authors_output_dir = self.config.get(
+            "authors_output_dir", "authors")
         self.author_file_template = "author_{author}.txt"
 
         self.collaborations = self.config["collaborations"]
@@ -36,13 +37,12 @@ class InspireInfo(object):
             self.cache_file = self.config["cache_file"]
         self.config["cache_file"] = self.cache_file
 
-
         self.institute_and_time_query = myutils.build_query_template(
             lower_date=self.config["lower_date"],
             upper_date=self.config["upper_date"],
             add_collaborations=self.collaborations,
             add_institute=True
-            )
+        )
 
         self.global_query = self.institute_and_time_query.format(
             page='1', size=str(self.config["size"]), institute=quote(self.config["institute"]))
@@ -82,9 +82,10 @@ class InspireInfo(object):
 
     @property
     def author_bais(self):
-        filelist  =  []
+        filelist = []
         for author in self.authors:
-            author_file = os.path.join(self.authors_output_dir, self.author_file_template.format(author=author))
+            author_file = os.path.join(
+                self.authors_output_dir, self.author_file_template.format(author=author))
             filelist.append(author_file)
 
         self.download_missing_authors()
@@ -92,11 +93,15 @@ class InspireInfo(object):
         return bais_to_check
 
     def get_data(self, retrieve=False):
-        """This function retrievs the inspire data and stores it in self.data, which is a dictionary. It also creates a list of Publication objects, which are stored in self.publications. The Publication objects are created from the data in self.data.
-        The query which is executed consists of the query for the institute and the time. No keywords are used for this query.
+        """This function retrievs the inspire data and stores it in self.data, which is a
+        dictionary. It also creates a list of Publication objects, which are stored in self.
+        publications. The Publication objects are created from the data in self.data.
+        The query which is executed consists of the query for the institute and the time.
+        No keywords are used for this query.
 
         Args:
-            retrieve (bool, optional): This option allows to read the data from a cache-file (False) or execute a query to inspire (True). Defaults to False.
+            retrieve (bool, optional): This option allows to read the data from a cache-file
+            (False) or execute a query to inspire (True). Defaults to False.
         """
         if retrieve:
             print("Retrieving data from inspire...")
@@ -109,7 +114,8 @@ class InspireInfo(object):
         self.has_data = True
 
         print("Creating Publication now...")
-        self.publications = [Publication(pub) for pub in self.data["hits"]["hits"]]
+        self.publications = [Publication(pub)
+                             for pub in self.data["hits"]["hits"]]
 
     def write_data(self):
         """Writes the data stored in self.data to a cache-file, named self.cache_file.
@@ -162,7 +168,8 @@ class InspireInfo(object):
                 continue
             if pub.collaborations is not None:
                 for collaboration in self.collaborations:
-                    if collaboration in pub.collaborations and pub.earliest_date_year >= self.earliest_date_collaboration_check:
+                    if ((collaboration in pub.collaborations) and
+                            (pub.earliest_date_year >= self.earliest_date_collaboration_check)):
                         if len(pub.authors) > 0:
                             for auth in pub.author_objects:
                                 if auth.bai in self.author_bais:
@@ -176,15 +183,20 @@ class InspireInfo(object):
         return matched_publications
 
     def download_publications(self, publications, link_type=None, target_dir=None):
-        """This function downloads the `publications` to the `target_dir`. If `link_type` is not specified, the link_type from the config file is used. If `target_dir` is not specified, the `link_type` is used. The tarball is named `publications_{link_type}_{date}.tar.gz`.
+        """This function downloads the `publications` to the `target_dir`. If `link_type` is not
+        specified, the link_type from the config file is used. If `target_dir` is not specified,
+        the `link_type` is used. The tarball is named `publications_{link_type}_{date}.tar.gz`.
 
         Raises:
-            ValueError: link_type must be one of ['bibtex', 'latex-eu', 'latex-us', 'json', 'cv', 'citations']
+            ValueError: link_type must be one of ['bibtex', 'latex-eu', 'latex-us', 'json', 'cv',
+            'citations']
 
         Args:
             publications (list of Publications): List of publications which should be downloaded.
-            link_type (str, optional): type of data which should be downloaded. Defaults to None and then uses the link_type from the config file or 'bibtex' if nothing is specified.
-            target_dir (str, optional): directory to which the publications are going to be stored. Defaults to None and then uses the `link_type`.
+            link_type (str, optional): type of data which should be downloaded. Defaults to None
+            and then uses the link_type from the config file or 'bibtex' if nothing is specified.
+            target_dir (str, optional): directory to which the publications are going to be stored.
+            Defaults to None and then uses the `link_type`.
         """
         if link_type is None:
             link_type = self.link_type
@@ -192,12 +204,15 @@ class InspireInfo(object):
             target_dir = link_type
 
         if link_type not in ['bibtex', 'latex-eu', 'latex-us', 'json', 'cv',
-                            'citations']:
-            raise ValueError("link_type must be one of ['bibtex', 'latex-eu', 'latex-us', 'json', 'cv', 'citations']")
+                             'citations']:
+            raise ValueError(
+                """link_type must be one of ['bibtex', 'latex-eu', 'latex-us', 'json', 'cv',
+                'citations']""")
         print("Downloading", link_type, "files to", target_dir)
 
         # what is today's date?
-        tarball_name = "publications_{}_{}".format(link_type, datetime.datetime.now().strftime("%Y-%m-%d"))
+        tarball_name = "publications_{}_{}".format(
+            link_type, datetime.datetime.now().strftime("%Y-%m-%d"))
         myutils.get_tarball_of_publications(publications=publications,
                                             link_type=link_type,
                                             target_dir=target_dir,
@@ -208,8 +223,10 @@ class InspireInfo(object):
 
         Args:
             publications (list of Publiations): List of publications which should be checked.
-            link_type (str, optional): type of data which should be downloaded. Defaults to None and then takes the link_type from the config file or 'bibtex' if nothing is specified.
-            target_dir (str, optional): Folder which is going to be checked for input. Defaults to None and then uses the `link_type`.
+            link_type (str, optional): type of data which should be downloaded. Defaults to None
+            and then takes the link_type from the config file or 'bibtex' if nothing is specified.
+            target_dir (str, optional): Folder which is going to be checked for input. Defaults to
+            None and then uses the `link_type`.
 
         Returns:
             list of Publications: List of publications which are not on disk.
@@ -231,7 +248,8 @@ class InspireInfo(object):
         else:
             authors = [author]
         if authors is None:
-            raise ValueError("Please set the authors in your config or set the authors of your InspireInfo.")
+            raise ValueError(
+                "Please set the authors in your config or set the authors of your InspireInfo.")
 
         print("Saving authors to directory: {}".format(authors_output_dir))
         if not os.path.exists(authors_output_dir):
@@ -241,7 +259,8 @@ class InspireInfo(object):
         for author in tqdm.tqdm(authors):
             query = myutils.build_person_query(author, size=5)
             data = myutils.read_from_inspire(query, silent=True)
-            path_to_save = os.path.join(authors_output_dir, self.author_file_template.format(author=author))
+            path_to_save = os.path.join(
+                authors_output_dir, self.author_file_template.format(author=author))
             with open(path_to_save, "w") as f:
                 json.dump(data, f)
 
@@ -259,7 +278,7 @@ class InspireInfo(object):
 
         self.match_publications_by_authors()
         self.match_publications_by_collaborations()
-        self.print_clickable_links(match_type="matched")
+        self.print_clickable_links()
 
         missing_publications = self.check_missing_publications_on_disk(
             self.matched_publications, link_type=download, target_dir=target_dir)
@@ -269,17 +288,20 @@ class InspireInfo(object):
                 publications=missing_publications,
                 link_type=download,
                 target_dir=target_dir
-                )
+            )
 
     def download_missing_authors(self):
         for author in self.authors:
-            author_file = os.path.join(self.authors_output_dir, self.author_file_template.format(author=author))
+            author_file = os.path.join(
+                self.authors_output_dir, self.author_file_template.format(author=author))
             if not os.path.exists(author_file):
-                print("Author file {} does not exist. Downloading it.".format(author_file))
-                self.search_authors_and_download(authors_output_dir=self.authors_output_dir, author=author)
+                print("Author file {} does not exist. Downloading it.".format(
+                    author_file))
+                self.search_authors_and_download(
+                    authors_output_dir=self.authors_output_dir, author=author)
 
     @property
     def conversion_style_to_html(self):
-        config = self.config_path
         abs_config_path = os.path.abspath(self.config_path)
-        return os.path.join(os.path.dirname(abs_config_path), self.config["conversion_style_to_html"])
+        return os.path.join(os.path.dirname(abs_config_path),
+                            self.config["conversion_style_to_html"])
