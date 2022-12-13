@@ -59,7 +59,7 @@ def get_publication_query(publications, clickable):
 
 def get_publication_by_id(id_list, size=500):
     other_query = 'https://inspirehep.net/api/literature?fields=titles,authors,id'
-    + '&sort=mostrecent&size={size}&page={page}&q='
+    other_query += '&sort=mostrecent&size={size}&page={page}&q='
     id_template = 'recid%3A{id} or '
 
     id_query = ""

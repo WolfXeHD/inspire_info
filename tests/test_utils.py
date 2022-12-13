@@ -9,7 +9,6 @@ import inspire_info.myutils as myutils
     (None, None, False, None,
      "https://inspirehep.net/api/literature?sort=mostrecent&size={size}&page={page}"),
     ("2006-01-01", None, False, None,
-
      "https://inspirehep.net/api/literature?sort=mostrecent&size={size}&page={page}"
      + "&q=(date>2006-01-01)"),
     ("2006-01-01", "2020-01-01", False, None,
@@ -33,7 +32,7 @@ import inspire_info.myutils as myutils
      + "%20and%20(date>2006-01-01)"),
     ("2006-01-01", "2020-01-01", True,
      ["XENON", "LZ"], "https://inspirehep.net/api/literature?sort=mostrecent&size={size}"
-     + "&page={page}&q=(aff:{institute}%20or%20(collaboration:XENON%20or%20collaboration:LZ"
+     + "&page={page}&q=(aff:{institute}%20or%20(collaboration:XENON%20or%20collaboration:LZ))"
      + "%20and%20(date>2006-01-01%20and%20date<2020-01-01)"),
     ("2006-01-01", "2020-01-01", False,
      ["XENON", "LZ"], "https://inspirehep.net/api/literature?sort=mostrecent&size={size}"
