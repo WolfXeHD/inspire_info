@@ -1,7 +1,7 @@
-inspire_info
-============
+inspire-info
+=======
 
 .. toctree::
    :maxdepth: 4
 
-   inspire_info
+   inspire-info
