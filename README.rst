@@ -6,8 +6,9 @@ inspire_info
 .. image:: https://img.shields.io/pypi/v/inspire_info.svg
         :target: https://pypi.python.org/pypi/inspire_info
 
-.. image:: https://img.shields.io/travis/WolfXeHD/inspire_info.svg
-        :target: https://travis-ci.com/WolfXeHD/inspire_info
+.. image:: https://github.com/WolfXeHD/inspire_info/actions/workflows/python-app.yml/badge.svg
+        :target: https://github.com/WolfXeHD/inspire_info/actions/workflows/python-app.yml/badge.svg
+
 
 .. image:: https://readthedocs.org/projects/inspire-info/badge/?version=latest
         :target: https://inspire-info.readthedocs.io/en/latest/?version=latest
