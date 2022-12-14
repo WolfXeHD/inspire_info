@@ -41,13 +41,14 @@ def parse_args():
         help="String to execute further specifications on the database",
         default=None)
     parser.add_argument("--target_html",
-            type=str,
-            help="Target html-file where the converted HTML should be copied to.",
-            default=None)
+                        type=str,
+                        help="Target html-file where the converted HTML should be copied to.",
+                        default=None)
     parser.add_argument("--target_html_body",
-            type=str,
-            help="Target html-file where the converted HTML (body only) should be copied to.",
-            default=None)
+                        type=str,
+                        help="""Target html-file where the converted HTML (body only)
+should be copied to.""",
+                        default=None)
 
     return dict(vars(parser.parse_args()))
 

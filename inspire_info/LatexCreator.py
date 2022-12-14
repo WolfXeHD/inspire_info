@@ -38,7 +38,8 @@ class LatexCreator:
         self.conversion_style_to_html = conversion_style_to_html
         self.pandoc_command = pandoc_command
         self.html_file = os.path.join(self.outdir, self.filename.replace(".tex", ".html"))
-        self.html_body_file = os.path.join(self.outdir, "body_" + self.filename.replace(".tex", ".html"))
+        self.html_body_file = os.path.join(self.outdir,
+                                           "body_" + self.filename.replace(".tex", ".html"))
 
         myutils.ensure_dirs(dirs=[self.outdir])
 
