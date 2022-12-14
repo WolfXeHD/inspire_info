@@ -37,6 +37,8 @@ class LatexCreator:
         self.filename = filename
         self.conversion_style_to_html = conversion_style_to_html
         self.pandoc_command = pandoc_command
+        self.html_file = os.path.join(self.outdir, self.filename.replace(".tex", ".html"))
+        self.html_body_file = os.path.join(self.outdir, "body_" + self.filename.replace(".tex", ".html"))
 
         myutils.ensure_dirs(dirs=[self.outdir])
 
@@ -101,7 +103,7 @@ class LatexCreator:
         copy_cmd = f"cp {self.convert_latex_to_html} ."
         os.system(copy_cmd)
         cmd = "{pandoc_command} --standalone --output {output} --citeproc --mathjax references.bib"
-        cmd += "--from bibtex --csl {conversion_style_to_html}"
+        cmd += " --from bibtex --csl {conversion_style_to_html}"
         cmd = cmd.format(
             pandoc_command=self.pandoc_command,
             output=self.filename.replace(".tex", ".html"),
@@ -110,11 +112,10 @@ class LatexCreator:
         os.chdir(cwd)
 
     def extract_body_of_html(self):
-        html_file = os.path.join(self.outdir, self.filename.replace(".tex", ".html"))
-        if not os.path.exists(html_file):
-            raise FileNotFoundError(f"File {html_file} does not exist.")
+        if not os.path.exists(self.html_file):
+            raise FileNotFoundError(f"File {self.html_file} does not exist.")
 
-        with open(html_file, "r") as f:
+        with open(self.html_file, "r") as f:
             html = f.read()
         soup = BeautifulSoup(html, features="html.parser")
 
@@ -123,6 +124,19 @@ class LatexCreator:
 
     def write_html_body_to_file(self):
         body = self.extract_body_of_html()
-        html_file = os.path.join(self.outdir, "body_" + self.filename.replace(".tex", ".html"))
-        with open(html_file, "w") as f:
+        with open(self.html_body_file, "w") as f:
             f.write(str(body))
+
+    def copy_html_to_target(self, target):
+        self.copy_file_to_target(source=self.html_file, target=target)
+
+    def copy_html_body_to_target(self, target):
+        self.copy_file_to_target(source=self.html_body_file, target=target)
+
+    def copy_file_to_target(self, source, target):
+        dirname = os.path.dirname(target)
+        if not os.path.exists(dirname):
+            os.makedirs(dirname)
+
+        cmd = f"cp {source} {target}"
+        os.system(cmd)

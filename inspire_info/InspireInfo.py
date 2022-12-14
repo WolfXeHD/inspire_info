@@ -211,7 +211,7 @@ class InspireInfo(object):
         print("Downloading", link_type, "files to", target_dir)
 
         # what is today's date?
-        tarball_name = "publications_{}_{}".format(
+        tarball_name = "publications_{}_{}.tar.gz".format(
             link_type, datetime.datetime.now().strftime("%Y-%m-%d"))
         myutils.get_tarball_of_publications(publications=publications,
                                             link_type=link_type,

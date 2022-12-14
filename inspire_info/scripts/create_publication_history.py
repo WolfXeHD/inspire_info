@@ -40,6 +40,14 @@ def parse_args():
         type=str,
         help="String to execute further specifications on the database",
         default=None)
+    parser.add_argument("--target_html",
+            type=str,
+            help="Target html-file where the converted HTML should be copied to.",
+            default=None)
+    parser.add_argument("--target_html_body",
+            type=str,
+            help="Target html-file where the converted HTML (body only) should be copied to.",
+            default=None)
 
     return dict(vars(parser.parse_args()))
 
@@ -123,6 +131,10 @@ def main():
         document_maker.create_latex_doc()
         document_maker.convert_latex_to_html()
         document_maker.write_html_body_to_file()
+        if parsed_args["target_html"] is not None:
+            document_maker.copy_html_to_target(target=parsed_args["target_html"])
+        if parsed_args["target_html_body"] is not None:
+            document_maker.copy_html_to_target(target=parsed_args["target_html_body"])
 
 
 if __name__ == "__main__":
