@@ -24,3 +24,6 @@ build/*
 configs/*
 dist/*
 tests/__pycache__/*
+_build/html/*
+docs/_build/html/*
+docs/_build/*
