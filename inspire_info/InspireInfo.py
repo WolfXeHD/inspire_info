@@ -264,7 +264,7 @@ class InspireInfo(object):
             with open(path_to_save, "w") as f:
                 json.dump(data, f)
 
-    def get_papers(self, lower_date, upper_date, download, target_dir):
+    def get_papers(self, lower_date, upper_date, download, target_dir, refresh):
         print("Overwriting lower_date and upper_date in config with: {} {}".format(
             lower_date, upper_date))
 
@@ -279,6 +279,9 @@ class InspireInfo(object):
         self.match_publications_by_authors()
         self.match_publications_by_collaborations()
         self.print_clickable_links()
+
+        if refresh:
+            os.rmdir(target_dir)
 
         missing_publications = self.check_missing_publications_on_disk(
             self.matched_publications, link_type=download, target_dir=target_dir)
@@ -305,3 +308,8 @@ class InspireInfo(object):
         abs_config_path = os.path.abspath(self.config_path)
         return os.path.join(os.path.dirname(abs_config_path),
                             self.config["conversion_style_to_html"])
+
+    def renew_papers(self):
+        for pub in self.publications:
+            if pub.matched:
+                pub.renew()

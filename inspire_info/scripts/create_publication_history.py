@@ -49,6 +49,9 @@ def parse_args():
                         help="""Target html-file where the converted HTML (body only)
 should be copied to.""",
                         default=None)
+    parser.add_argument("--refresh",
+                        action="store_true",
+                        help="""Refresh the publications-folder.""")
 
     return dict(vars(parser.parse_args()))
 
@@ -115,7 +118,9 @@ def main():
         dict_to_parse = {"lower_date": lower_date,
                          "upper_date": upper_date,
                          "download": "bibtex",
-                         "target_dir": target_dir}
+                         "target_dir": target_dir,
+                         "refresh": parsed_args["refresh"],
+                         }
         inspire_getter.get_papers(**dict_to_parse)
 
         filename = "publications_{lower_year}_{upper_year}.tex".format(
