@@ -132,6 +132,11 @@ class InspireInfo(object):
             print(link)
 
     def match_publications_by_authors(self):
+        """_summary_
+
+        Returns:
+            _type_: _description_
+        """
         if not self.has_data:
             self.get_data()
 
@@ -265,6 +270,25 @@ class InspireInfo(object):
                 json.dump(data, f)
 
     def get_papers(self, lower_date, upper_date, download, target_dir, refresh):
+        """Function to download the bibtex files of the publications of the authors and
+        collaborations. The publications are downloaded to the `target_dir`. If `refresh` is set to
+        True, the `target_dir` is deleted before downloading the publications. If `download` is set
+        to 'bibtex' or 'latex-eu' or 'latex-us', the publications are downloaded in the specified
+        format. lower_date and upper_date are used to filter the publications loaded from the cache.
+
+
+        Args:
+            lower_date (str): lower date of the publication date range, i.e. '2019-01-01'
+            upper_date (str): upper date of the publication date range, i.e. '2020-01-01'
+            download (str): type of data which should be downloaded. Must be one of ['bibtex',
+            'latex-eu', 'latex-us', 'json', 'cv', 'citations', 'None']
+            target_dir (str): directory to which the publications are going to be stored.
+            refresh (bool): if True, the `target_dir` is deleted before downloading the
+            publications.
+
+        Raises:
+            FileNotFoundError: if cache-file does not exist.
+        """
         print("Overwriting lower_date and upper_date in config with: {} {}".format(
             lower_date, upper_date))
 
@@ -274,13 +298,13 @@ class InspireInfo(object):
         if self.cache_exists:
             self.get_data(retrieve=False)
         else:
-            raise ValueError("Please create a cache-file first.")
+            raise FileNotFoundError("Please create a cache-file first.")
 
         self.match_publications_by_authors()
         self.match_publications_by_collaborations()
         self.print_clickable_links()
 
-        if refresh:
+        if refresh and os.path.exists(target_dir):
             os.rmdir(target_dir)
 
         missing_publications = self.check_missing_publications_on_disk(
@@ -294,6 +318,9 @@ class InspireInfo(object):
             )
 
     def download_missing_authors(self):
+        """Downloads the missing author files. Author files are needed to execute a search for the
+        BAI of the authors
+        """
         for author in self.authors:
             author_file = os.path.join(
                 self.authors_output_dir, self.author_file_template.format(author=author))
@@ -305,11 +332,7 @@ class InspireInfo(object):
 
     @property
     def conversion_style_to_html(self):
+        """Returns the full path to the conversion style for html."""
         abs_config_path = os.path.abspath(self.config_path)
         return os.path.join(os.path.dirname(abs_config_path),
                             self.config["conversion_style_to_html"])
-
-    def renew_papers(self):
-        for pub in self.publications:
-            if pub.matched:
-                pub.renew()
