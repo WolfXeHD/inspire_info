@@ -132,10 +132,14 @@ class InspireInfo(object):
             print(link)
 
     def match_publications_by_authors(self):
-        """_summary_
+        """This function matches the publications in self.publications to the authors in
+        self.authors based on the inspire BAI. Additionally, the affiliation of the author is
+        checked. If the affiliation matches the institute, the publication is added to the list of
+        matched publications, i.e flagged as 'matched' (see Publication class). The list of matched
+        publications is returned.
 
         Returns:
-            _type_: _description_
+            list: List of Publication objects which is matched
         """
         if not self.has_data:
             self.get_data()
@@ -161,6 +165,15 @@ class InspireInfo(object):
         return matched_publications
 
     def match_publications_by_collaborations(self):
+        """This function matches the publications in self.publications to the collaborations in
+        self.collaborations. The earliest date of the publication is checked against the earliest
+        date of the collaboration check. If the publication is older than the earliest date of the
+        collaboration check, the publication is not matched. The list of matched publications is
+        returned.
+
+        Returns:
+            list: List of Publication objects which is matched.
+        """
         if not self.has_data:
             if self.cache_exists:
                 self.get_data(retrieve=False)
@@ -247,7 +260,18 @@ class InspireInfo(object):
             link_type=link_type,
             target_dir=target_dir)
 
-    def search_authors_and_download(self, authors_output_dir="authors", author=None):
+    def search_authors_and_download(self, authors_output_dir=None, author=None):
+        """This function searches for the authors in Inspire and downloads the data to the
+        `authors_output_dir`. If `author` is not specified, all authors in the config file are
+
+        Args:
+            authors_output_dir (str, optional): _description_. Defaults to "authors".
+            author (_type_, optional): _description_. Defaults to None.
+
+        Raises:
+            ValueError: _description_
+        """
+
         if author is None:
             authors = self.authors
         else:
@@ -255,6 +279,8 @@ class InspireInfo(object):
         if authors is None:
             raise ValueError(
                 "Please set the authors in your config or set the authors of your InspireInfo.")
+        if authors_output_dir is None:
+            authors_output_dir = self.authors_output_dir
 
         print("Saving authors to directory: {}".format(authors_output_dir))
         if not os.path.exists(authors_output_dir):
