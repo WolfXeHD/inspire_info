@@ -4,10 +4,12 @@ __license__ = 'MIT'
 __email__ = 'tim.wolf@mpi-hd.mpg.de'
 
 import datetime
-import os
-import tqdm
 import json
+import os
+import shutil
 from urllib.parse import quote
+
+import tqdm
 
 import inspire_info.myutils as myutils
 from inspire_info.Publication import Publication
@@ -331,7 +333,7 @@ class InspireInfo(object):
         self.print_clickable_links()
 
         if refresh and os.path.exists(target_dir):
-            os.rmdir(target_dir)
+            shutil.rmtree(target_dir)
 
         missing_publications = self.check_missing_publications_on_disk(
             self.matched_publications, link_type=download, target_dir=target_dir)
