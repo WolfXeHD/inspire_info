@@ -96,7 +96,7 @@ def build_person_query(person, size=25, search_type="authors"):
                                           upper_date=None,
                                           add_institute=False,
                                           search_type=search_type)
-    + "&q={person}".format(person=quote(person))
+    query_template += "&q={person}".format(person=quote(person))
     query_template = query_template.format(size=size, page=1)
     return query_template
 
