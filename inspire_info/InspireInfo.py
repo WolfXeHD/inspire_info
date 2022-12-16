@@ -28,7 +28,7 @@ class InspireInfo(object):
         self.authors = self.config["authors"]
         self.authors_output_dir = self.config.get(
             "authors_output_dir", "authors")
-        self.authors_output_dir = os.path.join(self.config_dir, self.authors_output_dir)
+        self.authors_output_dir = os.path.join(self.config_dir, "..", self.authors_output_dir)
         self.author_file_template = "author_{author}.txt"
 
         self.collaborations = self.config["collaborations"]
