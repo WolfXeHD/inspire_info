@@ -18,6 +18,7 @@ from inspire_info.Publication import Publication
 class InspireInfo(object):
     def __init__(self, config_path):
         self.config_path = config_path
+        self.config_dir = os.path.dirname(self.config_path)
         self.config = myutils.read_config(self.config_path)
         self.has_data = False
         self.link_type = self.config.get("link_type", "bibtex")
@@ -27,6 +28,7 @@ class InspireInfo(object):
         self.authors = self.config["authors"]
         self.authors_output_dir = self.config.get(
             "authors_output_dir", "authors")
+        self.authors_output_dir = os.path.join(self.config_path, self.authors_output_dir)
         self.author_file_template = "author_{author}.txt"
 
         self.collaborations = self.config["collaborations"]
