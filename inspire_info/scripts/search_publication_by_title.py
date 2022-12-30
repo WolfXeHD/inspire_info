@@ -21,7 +21,7 @@ def parse_args():
     parser.add_argument('--title_to_find',
                         type=str,
                         help="Title to find in the publications.",
-    )
+                        required=True)
     return dict(vars(parser.parse_args()))
 
 
