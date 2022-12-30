@@ -40,6 +40,7 @@ class InspireInfo(object):
         else:
             self.cache_file = self.config["cache_file"]
         self.config["cache_file"] = self.cache_file
+        self.publications_to_block = self.config.get("publications_to_block", [])
 
         self.institute_and_time_query = myutils.build_query_template(
             lower_date=self.config["lower_date"],
@@ -97,7 +98,7 @@ class InspireInfo(object):
         return bais_to_check
 
     def get_data(self, retrieve=False):
-        """This function retrievs the inspire data and stores it in self.data, which is a
+        """This function retrieves the inspire data and stores it in self.data, which is a
         dictionary. It also creates a list of Publication objects, which are stored in self.
         publications. The Publication objects are created from the data in self.data.
         The query which is executed consists of the query for the institute and the time.
@@ -299,6 +300,12 @@ class InspireInfo(object):
             with open(path_to_save, "w") as f:
                 json.dump(data, f)
 
+    def block_publications(self):
+        for pub in self.publications:
+            if pub.matched and str(pub.id) in self.publications_to_block:
+                print("Blocking publication", pub.id, pub.title)
+                pub.matched = False
+
     def get_papers(self, lower_date, upper_date, download, target_dir, refresh):
         """Function to download the bibtex files of the publications of the authors and
         collaborations. The publications are downloaded to the `target_dir`. If `refresh` is set to
@@ -332,6 +339,7 @@ class InspireInfo(object):
 
         self.match_publications_by_authors()
         self.match_publications_by_collaborations()
+        self.block_publications()
         self.print_clickable_links()
 
         if refresh and os.path.exists(target_dir):
