@@ -36,6 +36,7 @@ setup(
             'ii_create_latex_doc=inspire_info.scripts.create_latex_doc:main',
             'ii_merge_bibtex_files=inspire_info.scripts.merge_bibtex_files:main',
             'ii_create_publication_history=inspire_info.scripts.create_publication_history:main',
+            'ii_search_publication_by_title=inspire_info.scripts.search_publication_by_title:main',
         ],
     },
     install_requires=requirements,
@@ -48,6 +49,6 @@ setup(
     test_suite='tests',
     tests_require=test_requirements,
     url='https://github.com/WolfXeHD/inspire_info',
-    version='0.1.13',
+    version='0.1.14',
     zip_safe=False,
 )
