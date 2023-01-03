@@ -140,7 +140,7 @@ def main():
         if parsed_args["target_html"] is not None:
             document_maker.copy_html_to_target(target=parsed_args["target_html"])
         if parsed_args["target_html_body"] is not None:
-            document_maker.copy_html_to_target(target=parsed_args["target_html_body"])
+            document_maker.copy_html_body_to_target(target=parsed_args["target_html_body"])
 
 
 if __name__ == "__main__":
