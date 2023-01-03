@@ -1,5 +1,5 @@
 __author__ = 'Tim Michael Heinz Wolf'
-__version__ = '0.1.14'
+__version__ = '0.1.15'
 __license__ = 'MIT'
 __email__ = 'tim.wolf@mpi-hd.mpg.de'
 
